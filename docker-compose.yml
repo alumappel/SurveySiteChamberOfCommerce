@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  survey-app:
+    build: .
+    container_name: survey_backend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./survey.json:/app/survey.json
+      - ./survey.db:/app/survey.db
+      - ./uploads:/app/uploads
+    restart: unless-stopped

@@ -1,0 +1,96 @@
+:root {
+  --primary-color: #0d6efd;
+  --secondary-color: #6c757d;
+  --success-color: #198754;
+  --danger-color: #dc3545;
+  --bg-color: #f8f9fa;
+  --card-bg: #ffffff;
+}
+
+body {
+  background-color: var(--bg-color);
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  transition: background-color 0.3s ease;
+}
+
+/* Vertical Slider Reset & Customization */
+.custom-vertical-slider {
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* WebKit */
+  appearance: slider-vertical;
+  width: 8px;
+  height: 100%;
+  padding: 0;
+  margin: 0;
+  background: #e9ecef;
+  outline: none;
+  border-radius: 10px;
+}
+
+.custom-vertical-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: var(--primary-color);
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+  transition: transform 0.1s;
+}
+
+.custom-vertical-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+}
+
+.slider-container {
+  position: relative;
+}
+
+.slider-labels span {
+  font-size: 0.85rem;
+}
+
+#slider-value-display {
+  transition: top 0.1s ease;
+  z-index: 10;
+}
+
+/* Animations */
+.fade-in {
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Empty State for Slider */
+.custom-vertical-slider.empty-state::-webkit-slider-thumb {
+  background: #adb5bd;
+}
+
+/* Topic Card Background Transition */
+.topic-card-bg {
+  transition: background-color 0.5s ease;
+}
+
+/* Tooltip for Disabled Button */
+.disabled-wrapper {
+  display: inline-block;
+  cursor: not-allowed;
+}
+
+/* Grid Layout overrides for Desktop */
+@media (min-width: 768px) {
+  #survey-container.desktop-grid {
+    max-width: 1200px !important;
+    background: transparent !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+  }
+  .desktop-grid .topic-card-wrapper {
+    margin-bottom: 2rem;
+  }
+}

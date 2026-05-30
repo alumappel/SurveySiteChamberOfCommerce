@@ -1,0 +1,144 @@
+{
+  "surveyId": "survey-2026-01",
+  "surveyName": "סקר עסקים - לשכת המסחר",
+  "isActive": true,
+  "rtl": true,
+  "language": "he",
+  "intro": {
+    "title": "סקר עסקים",
+    "body": "איגוד לשכות המסחר בוחן בימים אלו מהלך שמטרתו לשנות את האופן שבו עסקים קטנים ובינונים צורכים שירותים ומוצרים. אנחנו רוצים לעזור לכם למצוא את רוב מה שאתם צריכים במקום אחד, בשאיפה למחירים הטובים ביותר.\nחשוב מזה הוא הביטחון שלכם, לעבוד עם ספקים אמינים ולדעת שיש לכם את הגב של ארגון שמאגד מאחוריו עשרות אלפי עסקים כמוכם.\nכדי שנוכל להצליח ולגייס שותפים חזקים לדרך, חשוב לנו מאוד להבין מה אתם רוצים וצריכים שיהיה במועדון. זה לוקח בדיוק 2 דקות.",
+    "introVideoUrl": ""
+  },
+  "openingForm": {
+    "fields": [
+      {
+        "name": "business_name",
+        "label": "שם העסק",
+        "type": "text",
+        "required": true
+      },
+      {
+        "name": "business_sector",
+        "label": "ענף פעילות",
+        "type": "select",
+        "required": true,
+        "options": [
+          "קמעונאות",
+          "יבוא / יצוא",
+          "שירותים",
+          "תעשייה",
+          "סיטונאות",
+          "טכנולוגיה"
+        ]
+      },
+      {
+        "name": "employee_count",
+        "label": "מספר עובדים",
+        "type": "select",
+        "required": true,
+        "options": [
+          "1-10",
+          "11-50",
+          "51-200",
+          "מעל 200"
+        ]
+      }
+    ]
+  },
+  "rating": {
+    "type": "vertical_slider",
+    "min": 0,
+    "max": 100,
+    "topLabel": "100% רלוונטיות",
+    "bottomLabel": "0% רלוונטיות",
+    "autoAdvanceDelayMs": 1000
+  },
+  "toasts": {
+    "halfway": {
+      "message": "כל הכבוד! עברתם חצי מהסקר."
+    },
+    "lastThree": {
+      "message": "עוד קצת וסיימנו! נותרו 3 נושאים אחרונים."
+    }
+  },
+  "topics": [
+    {
+      "id": "rating_digital_agency",
+      "title": "סוכנות דיגיטל",
+      "description": "שירותי שיווק ופרסום דיגיטלי לקידום העסק.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "rating_data_pool",
+      "title": "מאגר מידע",
+      "description": "גישה לנתונים עסקיים ומחקרי שוק.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "rating_virtual_mall",
+      "title": "קניון וירטואלי",
+      "description": "פלטפורמת מסחר אלקטרוני לעסקים.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "rating_suppliers",
+      "title": "ספקים מומלצים",
+      "description": "רשימת ספקים נבחרים ומאושרים למועדון.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "business_tenders",
+      "title": "מכרז לעסקים",
+      "description": "השתתפות במכרזים וקבוצות רכישה להוזלת עלויות.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "benefits",
+      "title": "הטבות מיוחדות",
+      "description": "הנחות והטבות ייעודיות לעסקים ולעובדים.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "finance",
+      "title": "סליקה ופיננסים",
+      "description": "שירותי סליקה, הלוואות וניכיון צ'קים.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "technology_upgrade",
+      "title": "קפיצה טכנולוגית",
+      "description": "שדרוג מערכות טכנולוגיות וכלים לניהול חכם.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "quality_badge",
+      "title": "תו איכות",
+      "description": "קבלת תו איכות של מועדון העסקים.",
+      "imageUrl": "",
+      "isActive": true
+    },
+    {
+      "id": "business_banking",
+      "title": "בנקאות לעסקים",
+      "description": "שירותי בנקאות בתנאים מועדפים לעסקים.",
+      "imageUrl": "",
+      "isActive": true
+    }
+  ],
+  "completion": {
+    "title": "תודה רבה!",
+    "message": "התשובות שלך התקבלו בהצלחה."
+  },
+  "idle": {
+    "timeoutSeconds": 120,
+    "message": "לא סיימת את השאלון, ממשיכים?"
+  }
+}
