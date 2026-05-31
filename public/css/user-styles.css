@@ -1,10 +1,17 @@
 :root {
-  --primary-color: #0d6efd;
+  --primary-color: #00448B;
   --secondary-color: #6c757d;
   --success-color: #198754;
-  --danger-color: #dc3545;
+  --danger-color: #CC1725;
   --bg-color: #f8f9fa;
   --card-bg: #ffffff;
+  --card-width: 550px;
+}
+
+@media (max-width: 767px) {
+  :root {
+    --card-width: 82vw;
+  }
 }
 
 body {
@@ -13,34 +20,233 @@ body {
   transition: background-color 0.3s ease;
 }
 
-/* Vertical Slider Reset & Customization */
+/* Modern Hero Section Styling */
+.bg-primary-soft {
+  background-color: rgba(13, 110, 253, 0.1);
+}
+
+.play-btn-pulse {
+  width: 70px;
+  height: 70px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  animation: pulse 2s infinite;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.play-btn-pulse:hover {
+  background: rgba(255, 255, 255, 0.35);
+  transform: scale(1.08);
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
+  }
+}
+
+/* Carousel Layout System */
+.carousel-container {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  overflow: hidden;
+  position: relative;
+  padding: 1.5rem 0;
+}
+
+.carousel-track {
+  display: flex;
+  gap: 24px;
+  transition: transform 0.5s cubic-bezier(0.25, 1, 0.5, 1);
+  padding: 1rem 0;
+  /* Add padding to center the active card perfectly */
+  padding-right: calc(50% - var(--card-width) / 2);
+  padding-left: calc(50% - var(--card-width) / 2);
+}
+
+.topic-card-wrapper {
+  flex: 0 0 var(--card-width);
+  width: var(--card-width);
+  transition: all 0.4s ease;
+}
+
+.topic-card-bg {
+  transition: background-color 0.5s ease, transform 0.5s ease, opacity 0.5s ease, box-shadow 0.5s ease, filter 0.5s ease;
+}
+
+.topic-card-bg.inactive-card {
+  opacity: 0.4;
+  transform: scale(0.92);
+  filter: grayscale(10%) blur(0.5px);
+  pointer-events: none; /* Disable mouse/keyboard on neighbors */
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+}
+
+.topic-card-bg.active-card {
+  opacity: 1;
+  transform: scale(1.02);
+  filter: none;
+  box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+}
+
+/* Carousel Navigation Buttons */
+.carousel-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: var(--primary-color);
+  z-index: 10;
+  transition: all 0.3s ease;
+}
+
+.carousel-nav-btn:hover {
+  background: var(--primary-color);
+  color: white;
+  box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3) !important;
+}
+
+.carousel-nav-btn:disabled, .carousel-nav-btn.disabled {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.carousel-nav-btn.prev-btn {
+  right: 15px;
+}
+
+.carousel-nav-btn.next-btn {
+  left: 15px;
+}
+
+@media (max-width: 767px) {
+  .carousel-nav-btn {
+    display: none !important; /* Hide arrows on mobile touch screens */
+  }
+}
+
+/* High-Contrast Custom Vertical Slider Styling */
 .custom-vertical-slider {
   writing-mode: bt-lr; /* IE */
   -webkit-appearance: slider-vertical; /* WebKit */
   appearance: slider-vertical;
-  width: 8px;
+  width: 14px;
   height: 100%;
+  background: #cbd5e1; /* Strong contrast slate gray */
+  border-radius: 99px;
+  border: 1px solid #94a3b8;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  outline: none;
+  cursor: pointer;
   padding: 0;
   margin: 0;
-  background: #e9ecef;
-  outline: none;
-  border-radius: 10px;
+  transition: background-color 0.3s;
 }
 
+.custom-vertical-slider:hover {
+  background: #cbd5e1;
+}
+
+/* Webkit Track Styling */
+.custom-vertical-slider::-webkit-slider-runnable-track {
+  width: 14px;
+  height: 100%;
+  background: transparent;
+  border-radius: 99px;
+  border: none;
+  box-shadow: none;
+}
+
+/* Webkit Slider Thumb - The physical grab handle */
 .custom-vertical-slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   appearance: none;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--primary-color);
-  cursor: pointer;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-  transition: transform 0.1s;
+  width: 32px;
+  height: 48px; /* Elegant oval/pill physical handle */
+  border-radius: 8px; /* Rounded rectangle */
+  background-color: var(--primary-color);
+  background-image: 
+    linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.45) 30%, rgba(255,255,255,0.45) 40%, transparent 40%, transparent 60%, rgba(255,255,255,0.45) 60%, rgba(255,255,255,0.45) 70%, transparent 70%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4), 0 2px 4px rgba(0,0,0,0.15);
+  cursor: grab;
+  transition: all 0.2s ease;
+  margin-top: 0px;
 }
 
-.custom-vertical-slider::-webkit-slider-thumb:hover {
-  transform: scale(1.2);
+.custom-vertical-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+  background-color: #0b5ed7;
+}
+
+/* Empty State Webkit Slider Thumb */
+.custom-vertical-slider.empty-state::-webkit-slider-thumb {
+  background-color: #ffffff; /* Transparent/white inside */
+  background-image: none;
+  border: 2px solid #cbd5e1;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+}
+
+/* Firefox Track Styling */
+.custom-vertical-slider::-moz-range-track {
+  width: 14px;
+  height: 100%;
+  background: #cbd5e1;
+  border-radius: 99px;
+  border: 1px solid #94a3b8;
+  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Firefox Slider Thumb */
+.custom-vertical-slider::-moz-range-thumb {
+  width: 32px;
+  height: 48px;
+  border-radius: 8px;
+  background-color: var(--primary-color);
+  background-image: 
+    linear-gradient(90deg, transparent 30%, rgba(255,255,255,0.45) 30%, rgba(255,255,255,0.45) 40%, transparent 40%, transparent 60%, rgba(255,255,255,0.45) 60%, rgba(255,255,255,0.45) 70%, transparent 70%);
+  border: 2px solid #ffffff;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.4), 0 2px 4px rgba(0,0,0,0.15);
+  cursor: grab;
+  transition: all 0.2s ease;
+}
+
+.custom-vertical-slider::-moz-range-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.1);
+  background-color: #0b5ed7;
+}
+
+/* Empty State Firefox Slider Thumb */
+.custom-vertical-slider.empty-state::-moz-range-thumb {
+  background-color: #ffffff;
+  background-image: none;
+  border: 2px solid #cbd5e1;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.15);
 }
 
 .slider-container {
@@ -66,11 +272,6 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 
-/* Empty State for Slider */
-.custom-vertical-slider.empty-state::-webkit-slider-thumb {
-  background: #adb5bd;
-}
-
 /* Topic Card Background Transition */
 .topic-card-bg {
   transition: background-color 0.5s ease;
@@ -82,15 +283,9 @@ body {
   cursor: not-allowed;
 }
 
-/* Grid Layout overrides for Desktop */
-@media (min-width: 768px) {
-  #survey-container.desktop-grid {
-    max-width: 1200px !important;
-    background: transparent !important;
-    box-shadow: none !important;
-    padding: 0 !important;
-  }
-  .desktop-grid .topic-card-wrapper {
-    margin-bottom: 2rem;
-  }
+/* Page lock rules to prevent overflow */
+.survey-page-body {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
 }

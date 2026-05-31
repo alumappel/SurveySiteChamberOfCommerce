@@ -6,26 +6,55 @@
     <title>סקר עסקים - לשכת המסחר</title>
     <!-- Bootstrap CSS RTL -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
     <link rel="stylesheet" href="css/user-styles.css">
 </head>
 <body>
-    <div class="container d-flex flex-column min-vh-100 justify-content-center">
-        <header class="text-center mb-5">
-            <h1 id="intro-title" class="display-4 fw-bold text-primary">טוען...</h1>
-            <p id="intro-body" class="lead text-muted"></p>
+    <div class="container min-vh-100 d-flex flex-column justify-content-between py-4">
+        <header class="w-100 text-start mb-4">
+            <img src="assets/לוגו חדש_איגוד לשכת המסחר_עברית.svg" alt="לוגו לשכת המסחר" style="height: 60px;">
         </header>
-
-        <main class="card shadow-lg p-4 rounded-4 mx-auto w-100" style="max-width: 600px;">
-            <form id="opening-form" class="needs-validation" novalidate>
-                <div id="form-fields">
-                    <!-- Fields injected by JS -->
+        <div class="row align-items-center my-auto g-4">
+            <!-- Right Column (Content) - 2/3 width on large, 1/2 on small -->
+            <div class="col-sm-6 col-md-6 col-lg-8 text-start d-flex flex-column justify-content-center" dir="rtl">
+                <div class="hero-text-section">
+                    <h1 id="intro-title" class="display-4 fw-bold text-dark lh-sm text-start">טוען...</h1>
+                    <p id="intro-body" class="lead text-muted mt-3 mb-0"></p>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg w-100 mt-4 rounded-pill shadow-sm">התחל בסקר</button>
-            </form>
-        </main>
+            </div>
+            
+            <!-- Left Column (Visual Placeholder) - 1/3 width on large, 1/2 on small -->
+            <div class="col-sm-6 col-md-6 col-lg-4 d-none d-sm-block">
+                <div class="media-placeholder-container position-relative overflow-hidden rounded-5 shadow-lg d-flex flex-column align-items-center justify-content-center text-center p-4" style="height: 320px; background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);">
+                    <div class="absolute-bg-glow"></div>
+                    
+                    <div class="media-content z-index-1 text-white">
+                        <div class="play-btn-pulse mb-3 mx-auto">
+                            <i class="bi bi-play-fill fs-2 text-white ms-1"></i>
+                        </div>
+                        <h4 class="fw-bold mb-1">סרטון הסבר / תמונה</h4>
+                        <p class="text-white-50 small max-w-sm mx-auto mb-0" style="font-size: 0.8rem;">כאן יופיע סרטון קצר המציג את מועדון העסקים החדש</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Row for the Questionnaire Form -->
+        <div class="row justify-content-center mb-auto mt-4">
+            <div class="col-12 d-flex justify-content-center">
+                <div class="card shadow-lg border-0 p-4 rounded-4 w-100" style="max-width: 600px;">
+                    <form id="opening-form" class="needs-validation" novalidate>
+                        <div id="form-fields">
+                            <!-- Fields injected by JS -->
+                        </div>
+                        <button type="submit" class="btn btn-primary btn-lg w-100 mt-4 rounded-pill shadow-sm py-3 fw-bold">בואו נתחיל! <i class="bi bi-arrow-left ms-2"></i></button>
+                    </form>
+                </div>
+            </div>
+        </div>
         
-        <footer class="text-center mt-5 text-muted small">
-            <p>&copy; 2026 לשכת המסחר. כל הזכויות שמורות.</p>
+        <footer class="text-center mt-4 text-muted small">
+            <p>פותח ע"י אבינועם עמית יוסף <a href="https://avinoamaj.com/" target="_blank" class="text-decoration-none">avinoamaj.com</a></p>
         </footer>
     </div>
 
