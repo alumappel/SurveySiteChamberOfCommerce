@@ -62,10 +62,15 @@ const UserApp = (() => {
     // };
 
     const loadConfig = async () => {
+        const debugBox = document.getElementById('intro-body') || document.body;
+
         try {
-            document.body.innerHTML = '<h1 class="text-center mt-5">בודק חיבור לשרת...</h1>';
+            if (debugBox) {
+                debugBox.innerHTML = 'בודק חיבור לשרת...';
+            }
 
             const res = await fetch(`${BASE_URL}/api/survey/config`, {
+                method: 'GET',
                 credentials: 'include',
                 cache: 'no-store',
                 headers: {
@@ -75,26 +80,40 @@ const UserApp = (() => {
 
             const text = await res.text();
 
+            console.log('CONFIG STATUS:', res.status);
+            console.log('CONFIG RESPONSE:', text);
+
             if (!res.ok) {
                 throw new Error(`Server returned ${res.status}: ${text.slice(0, 300)}`);
             }
 
             config = JSON.parse(text);
+
+            if (!config || !config.topics) {
+                throw new Error('השרת ענה, אבל config.topics לא קיים. כנראה survey.json לא במבנה הצפוי.');
+            }
+
             activeTopics = config.topics.filter(t => t.isActive);
             surveyState.survey_id = config.surveyId;
 
-            document.body.innerHTML = '';
+            console.log('CONFIG LOADED OK:', config);
+
         } catch (e) {
             console.error('Failed to load config', e);
-            document.body.innerHTML = `
-            <div style="direction: rtl; padding: 20px; font-family: Arial;">
-                <h1>שגיאה בטעינת הסקר</h1>
-                <p><strong>BASE_URL:</strong></p>
-                <pre>${BASE_URL}</pre>
-                <p><strong>שגיאה:</strong></p>
-                <pre style="white-space: pre-wrap;">${e.message}</pre>
-            </div>
-        `;
+
+            if (debugBox) {
+                debugBox.innerHTML = `
+                <div style="direction: rtl; padding: 15px; font-family: Arial; color: #900;">
+                    <h3>שגיאה בטעינת נתוני הסקר</h3>
+                    <p><strong>BASE_URL:</strong></p>
+                    <pre style="white-space: pre-wrap;">${BASE_URL}</pre>
+                    <p><strong>השגיאה:</strong></p>
+                    <pre style="white-space: pre-wrap;">${e.message}</pre>
+                </div>
+            `;
+            }
+
+            config = null;
         }
     };
 
