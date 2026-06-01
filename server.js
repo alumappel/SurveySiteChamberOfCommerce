@@ -118,10 +118,10 @@ app.post('/api/survey/start', (req, res) => {
 // Update Survey Progress
 app.put('/api/survey/update/:response_id', (req, res) => {
   const { response_id } = req.params;
-  const { topic_ratings_json, last_answered_topic_index, last_answered_topic_id, status } = req.body;
+  const { topic_ratings_json, last_answered_topic_index, last_answered_topic_id, status, final_comment } = req.body;
 
-  let query = `UPDATE responses SET topic_ratings_json = ?, last_answered_topic_index = ?, last_answered_topic_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP`;
-  let params = [topic_ratings_json, last_answered_topic_index, last_answered_topic_id, status];
+  let query = `UPDATE responses SET topic_ratings_json = ?, last_answered_topic_index = ?, last_answered_topic_id = ?, status = ?, final_comment = ?, updated_at = CURRENT_TIMESTAMP`;
+  let params = [topic_ratings_json, last_answered_topic_index, last_answered_topic_id, status, final_comment];
 
   if (status === 'completed') {
     query += `, completed_at = CURRENT_TIMESTAMP`;

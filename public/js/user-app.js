@@ -190,6 +190,11 @@ const UserApp = (() => {
             data.survey_id = surveyState.survey_id;
 
             try {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> טוען...';
+                submitBtn.disabled = true;
+
                 const res = await fetch(`${BASE_URL}/api/survey/start`, {
                     method: 'POST',
                     credentials: 'include',
@@ -204,10 +209,29 @@ const UserApp = (() => {
 
                 // Save to local storage to pass to survey page
                 localStorage.setItem('surveyState', JSON.stringify(surveyState));
-                window.location.href = 'survey.html';
+                
+                submitBtn.innerHTML = originalText;
+                submitBtn.disabled = false;
+                
+                const instructionModalEl = document.getElementById('instructionModal');
+                if (instructionModalEl) {
+                    const instructionModal = new bootstrap.Modal(instructionModalEl);
+                    instructionModal.show();
+                    
+                    document.getElementById('btn-understood-go').addEventListener('click', () => {
+                        window.location.href = 'survey.html';
+                    }, { once: true });
+                } else {
+                    window.location.href = 'survey.html';
+                }
             } catch (err) {
                 console.error(err);
                 alert('שגיאה בתקשורת עם השרת');
+                const submitBtn = form.querySelector('button[type="submit"]');
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = 'בואו נתחיל! <i class="bi bi-arrow-left ms-2"></i>';
+                }
             }
         });
     };
@@ -326,10 +350,22 @@ const UserApp = (() => {
         const displayVal = hasValue ? val : 50;
         const bgStyle = hasValue ? `background-color: ${getHslColor(displayVal)};` : '';
 
-        // Last card gets a finish submit button
+        // Last card gets a finish submit button, but only when editing
         const isLastCard = index === activeTopics.length - 1;
-        const buttonText = isLastCard ? 'הגשת הסקר <i class="bi bi-check-lg ms-1"></i>' : 'להמשך <i class="bi bi-chevron-left"></i>';
-        const buttonClass = isLastCard ? 'btn-success btn-finish-survey' : 'btn-next';
+        const isEditing = surveyState.status === 'edited_after_completion';
+        
+        let buttonHtml = '';
+        if (isLastCard && isEditing) {
+            buttonHtml = `
+                <div class="text-center mt-4">
+                    <span class="d-inline-block disabled-wrapper" tabindex="0">
+                        <button class="btn btn-success btn-lg rounded-pill px-5 shadow-sm btn-finish-survey ${!hasValue ? 'disabled' : ''}" style="${!hasValue ? 'pointer-events: none;' : ''}">
+                            הגשת הסקר <i class="bi bi-check-lg ms-1"></i>
+                        </button>
+                    </span>
+                </div>
+            `;
+        }
 
         return `
             <div class="topic-card-wrapper" id="wrapper-${topic.id}">
@@ -341,26 +377,20 @@ const UserApp = (() => {
                         <p class="text-muted mb-3" style="min-height: 48px; font-size: 0.95rem;">${topic.description}</p>
                     </div>
 
-                    <div class="slider-container d-flex justify-content-center align-items-stretch mx-auto my-2 position-relative" style="height: 220px; width: 100px;">
-                        <div class="slider-labels d-flex flex-column justify-content-between text-muted small me-3" aria-hidden="true">
-                            <span class="fw-bold text-success">${config.rating.topLabel}</span>
-                            <span class="fw-bold text-danger">${config.rating.bottomLabel}</span>
-                        </div>
+                    <div class="slider-container d-flex flex-row justify-content-center align-items-stretch mx-auto my-2 position-relative" style="height: 220px; width: 100px; direction: ltr;">
                         <input type="range" class="form-range custom-vertical-slider topic-slider ${!hasValue ? 'empty-state' : ''}" 
                             data-topic-id="${topic.id}" data-index="${index}"
                             min="${config.rating.min}" max="${config.rating.max}" value="${displayVal}" step="1">
+                        <div class="slider-labels d-flex flex-column justify-content-between text-muted small ms-3" aria-hidden="true" style="direction: rtl;">
+                            <span class="fw-bold text-success">${config.rating.topLabel}</span>
+                            <span class="fw-bold text-danger">${config.rating.bottomLabel}</span>
+                        </div>
                         <div class="position-absolute translate-middle badge bg-primary fs-5 slider-value-display" id="display-${topic.id}" style="top: ${hasValue ? 100 - displayVal : 50}%; left: -40px;">
                             ${hasValue ? displayVal : ''}
                         </div>
                     </div>
-
-                    <div class="text-center mt-4">
-                        <span class="d-inline-block disabled-wrapper" tabindex="0" data-bs-toggle="tooltip" title="חובה לדרג נושא כדי להתקדם">
-                            <button class="btn btn-primary btn-lg rounded-pill px-5 shadow-sm ${buttonClass} ${!hasValue ? 'disabled' : ''}" style="${!hasValue ? 'pointer-events: none;' : ''}">
-                                ${buttonText}
-                            </button>
-                        </span>
-                    </div>
+                    
+                    ${buttonHtml}
                 </div>
             </div>
         `;
@@ -469,44 +499,11 @@ const UserApp = (() => {
         updateCarousel();
         updateNavButtons();
 
-        // Attach Swipe Gesture Events
-        activeTopics.forEach(topic => {
-            const cardEl = document.getElementById(`card-${topic.id}`);
-            if (cardEl) {
-                cardEl.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; }, { passive: true });
-                cardEl.addEventListener('touchend', e => {
-                    touchEndX = e.changedTouches[0].screenX;
-                    handleSwipe();
-                });
-            }
-        });
-
         // Re-initialize tooltips
         const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
         [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
         attachDynamicListeners();
-    };
-
-    const handleSwipe = () => {
-        const swipeThreshold = 50;
-        if (touchEndX < touchStartX - swipeThreshold) {
-            // Swiped left (Next)
-            const currentTopic = activeTopics[currentTopicIndex];
-            const hasRatedCurrent = surveyState.topic_ratings[currentTopic?.id] !== undefined;
-            if (hasRatedCurrent && currentTopicIndex < activeTopics.length - 1) {
-                currentTopicIndex++;
-                updateCarousel();
-                updateNavButtons();
-            }
-        } else if (touchEndX > touchStartX + swipeThreshold) {
-            // Swiped right (Prev)
-            if (currentTopicIndex > 0) {
-                currentTopicIndex--;
-                updateCarousel();
-                updateNavButtons();
-            }
-        }
     };
 
     const attachDynamicListeners = () => {
@@ -528,11 +525,6 @@ const UserApp = (() => {
                 card.style.backgroundColor = getHslColor(val);
 
                 // Enable button inside active card
-                const nextBtn = card.querySelector('.btn-next');
-                if (nextBtn) {
-                    nextBtn.classList.remove('disabled');
-                    nextBtn.style.pointerEvents = 'auto';
-                }
                 const finishBtn = card.querySelector('.btn-finish-survey');
                 if (finishBtn) {
                     finishBtn.classList.remove('disabled');
@@ -574,14 +566,6 @@ const UserApp = (() => {
             });
         });
 
-        // Next buttons click inside cards
-        const nextBtns = document.querySelectorAll('.btn-next');
-        nextBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                handleNextTopic();
-            });
-        });
-
         // Finish buttons click inside card
         const finishBtns = document.querySelectorAll('.btn-finish-survey');
         finishBtns.forEach(btn => {
@@ -596,7 +580,12 @@ const UserApp = (() => {
 
     const handleNextTopic = async () => {
         if (currentTopicIndex >= activeTopics.length - 1) {
-            // Already on last card, do NOT auto-advance to submit, let them click "הגש סקר"
+            if (surveyState.status !== 'edited_after_completion') {
+                surveyState.status = 'completed';
+                await saveProgress();
+                localStorage.setItem('surveyState', JSON.stringify(surveyState));
+                showCompletion();
+            }
             return;
         }
         currentTopicIndex++;

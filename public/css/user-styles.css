@@ -165,11 +165,7 @@ body {
   left: 15px;
 }
 
-@media (max-width: 767px) {
-  .carousel-nav-btn {
-    display: none !important; /* Hide arrows on mobile touch screens */
-  }
-}
+/* Arrows are now shown on mobile too */
 
 /* High-Contrast Custom Vertical Slider Styling */
 .custom-vertical-slider {
