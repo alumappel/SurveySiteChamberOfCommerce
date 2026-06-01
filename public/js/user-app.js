@@ -3,7 +3,10 @@ const UserApp = (() => {
     const BASE_URL = 'https://remote-defiance-unpainted.ngrok-free.dev'; // כתובת ngrok
 
     const FETCH_OPTIONS = {
-        credentials: 'include'
+        credentials: 'include',
+        headers: {
+            'ngrok-skip-browser-warning': 'true'
+        }
     };
 
 
@@ -156,7 +159,10 @@ const UserApp = (() => {
                 const res = await fetch(`${BASE_URL}/api/survey/start`, {
                     method: 'POST',
                     credentials: 'include',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
                     body: JSON.stringify(data)
                 });
                 const result = await res.json();
@@ -570,7 +576,10 @@ const UserApp = (() => {
             await fetch(`${BASE_URL}/api/survey/update/${surveyState.response_id}`, {
                 method: 'PUT',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'ngrok-skip-browser-warning': 'true'
+                },
                 body: JSON.stringify({
                     topic_ratings_json: JSON.stringify(surveyState.topic_ratings),
                     last_answered_topic_index: surveyState.last_answered_topic_index,

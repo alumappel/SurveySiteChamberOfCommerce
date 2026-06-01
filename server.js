@@ -36,7 +36,13 @@ app.set('trust proxy', 1);
 
 app.use(cors({
   origin: allowedOrigins,
-  credentials: true
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'ngrok-skip-browser-warning'
+  ]
 }));
 
 app.use(bodyParser.json());
