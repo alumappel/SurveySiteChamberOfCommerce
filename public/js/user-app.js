@@ -309,6 +309,7 @@ const UserApp = (() => {
         const btnNext = document.getElementById('carousel-btn-next');
         if (btnPrev && btnNext) {
             btnPrev.addEventListener('click', () => {
+                if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
                 if (currentTopicIndex > 0) {
                     currentTopicIndex--;
                     updateCarousel();
@@ -316,11 +317,8 @@ const UserApp = (() => {
                 }
             });
             btnNext.addEventListener('click', () => {
-                if (currentTopicIndex < activeTopics.length - 1) {
-                    currentTopicIndex++;
-                    updateCarousel();
-                    updateNavButtons();
-                }
+                if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+                handleNextTopic();
             });
         }
 
@@ -558,6 +556,7 @@ const UserApp = (() => {
         const prevBtns = document.querySelectorAll('.btn-prev');
         prevBtns.forEach(btn => {
             btn.addEventListener('click', () => {
+                if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
                 if (currentTopicIndex > 0) {
                     currentTopicIndex--;
                     updateCarousel();
