@@ -23,19 +23,117 @@
             <!-- Sidebar -->
             <div class="col-md-3 mb-4">
                 <div class="list-group">
-                    <button class="list-group-item list-group-item-action active" id="tab-data" onclick="AdminApp.switchTab('data')">נתונים וייצוא</button>
-                    <button class="list-group-item list-group-item-action" id="tab-config" onclick="AdminApp.switchTab('config')">עריכת תוכן סקר</button>
+                    <button class="list-group-item list-group-item-action active" id="tab-surveys" onclick="AdminApp.switchTab('surveys')">רשימת שאלונים</button>
+                    <button class="list-group-item list-group-item-action d-none" id="tab-visual" onclick="AdminApp.switchTab('visual')">עריכת שאלון (ויזואלי)</button>
+                    <button class="list-group-item list-group-item-action" id="tab-data" onclick="AdminApp.switchTab('data')">נתונים וייצוא (כללי)</button>
+                    <button class="list-group-item list-group-item-action" id="tab-config" onclick="AdminApp.switchTab('config')">הגדרות מתקדמות (JSON)</button>
                 </div>
             </div>
             
             <!-- Main Content -->
             <div class="col-md-9">
+                <!-- Surveys List Tab -->
+                <div id="section-surveys" class="card p-4 shadow-sm mb-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h3>דאשבורד שאלונים</h3>
+                        <button class="btn btn-primary" onclick="AdminApp.createNewSurvey()">+ יצירת שאלון חדש</button>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>שם השאלון</th>
+                                    <th>תאריך יצירה</th>
+                                    <th>סטטוס</th>
+                                    <th>פעולות</th>
+                                </tr>
+                            </thead>
+                            <tbody id="surveys-table-body">
+                                <tr><td colspan="4" class="text-center">טוען נתונים...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Visual Editor Tab -->
+                <div id="section-visual" class="card p-4 shadow-sm mb-4 d-none">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h3>עריכת שאלון</h3>
+                        <div>
+                            <button class="btn btn-outline-secondary me-2" onclick="AdminApp.cancelVisualEdit()">ביטול</button>
+                            <button class="btn btn-success" onclick="AdminApp.saveVisualEdit()">שמור שינויים</button>
+                        </div>
+                    </div>
+                    
+                    <form id="visual-editor-form" class="needs-validation" novalidate>
+                        <input type="hidden" id="ve-survey-id">
+                        
+                        <div class="mb-4">
+                            <h5>הגדרות כלליות</h5>
+                            <div class="mb-3">
+                                <label for="ve-survey-name" class="form-label">שם השאלון (פנימי בניהול)</label>
+                                <input type="text" class="form-control" id="ve-survey-name" required>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-4">
+                            <h5>מסך פתיחה ומדיה</h5>
+                            <div class="mb-3">
+                                <label for="ve-intro-title" class="form-label">כותרת הפתיחה</label>
+                                <input type="text" class="form-control" id="ve-intro-title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ve-intro-body" class="form-label">טקסט פתיחה (ניתן להזין שורות חדשות)</label>
+                                <textarea class="form-control" id="ve-intro-body" rows="4" required></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ve-video-url" class="form-label">קישור לסרטון (יוטיוב, וימאו או קובץ) - אופציונלי</label>
+                                <div class="input-group">
+                                    <input type="text" class="form-control text-start" dir="ltr" id="ve-video-url" placeholder="https://www.youtube.com/watch?v=...">
+                                    <button class="btn btn-outline-secondary" type="button" onclick="AdminApp.previewVisualMedia()">הצג תצוגה מקדימה</button>
+                                </div>
+                            </div>
+                            <div id="ve-media-preview-container" class="mt-2 p-2 bg-light rounded d-none text-center">
+                                <div id="ve-media-preview-wrapper" class="ratio ratio-16x9 mx-auto" style="max-width: 400px; height: 225px;"></div>
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-3">
+                                <h5>נושאים לדירוג</h5>
+                                <button type="button" class="btn btn-sm btn-primary" onclick="AdminApp.addTopic()">+ הוסף נושא</button>
+                            </div>
+                            <div id="ve-topics-container">
+                                <!-- Topics injected here -->
+                            </div>
+                        </div>
+
+                        <hr>
+
+                        <div class="mb-4">
+                            <h5>מסך סיום</h5>
+                            <div class="mb-3">
+                                <label for="ve-completion-title" class="form-label">כותרת סיום</label>
+                                <input type="text" class="form-control" id="ve-completion-title" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="ve-completion-message" class="form-label">הודעת סיום</label>
+                                <textarea class="form-control" id="ve-completion-message" rows="2" required></textarea>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <!-- Data Tab -->
-                <div id="section-data" class="card p-4 shadow-sm mb-4">
-                    <h3>נתוני סקר</h3>
-                    <p>ניתן לייצא את כל נתוני הסקר (תשובות חלקיות ומלאות) לקובץ אקסל.</p>
+                <div id="section-data" class="card p-4 shadow-sm mb-4 d-none">
+                    <h3>נתוני סקר כלליים</h3>
+                    <p>ניתן לייצא את כל נתוני הסקר (מכל השאלונים) לקובץ אקסל.</p>
                     <div class="mt-3">
-                        <button class="btn btn-success" onclick="AdminApp.exportData()">הורדת קובץ אקסל (Excel)</button>
+                        <button class="btn btn-success" onclick="AdminApp.exportData()">הורדת קובץ אקסל מלא (Excel)</button>
                     </div>
                 </div>
 

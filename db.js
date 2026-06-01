@@ -38,6 +38,15 @@ db.serialize(() => {
     FOREIGN KEY(response_id) REFERENCES responses(response_id)
   )`);
 
+  // Create surveys table
+  db.run(`CREATE TABLE IF NOT EXISTS surveys (
+    id TEXT PRIMARY KEY,
+    name TEXT,
+    config_json TEXT,
+    is_active INTEGER DEFAULT 1,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  )`);
+
   // Create admin_users table
   db.run(`CREATE TABLE IF NOT EXISTS admin_users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

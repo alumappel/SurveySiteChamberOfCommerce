@@ -80,15 +80,27 @@ const authenticateAdmin = (req, res, next) => {
 
 // --- API ROUTES ---
 
-// Get Survey Config
+// Get Survey Config (Client)
 app.get('/api/survey/config', (req, res) => {
-  const configPath = path.join(__dirname, 'survey.json');
-  if (fs.existsSync(configPath)) {
-    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    res.json(config);
+  const surveyId = req.query.id;
+  let query = "SELECT config_json FROM surveys WHERE is_active = 1";
+  let params = [];
+  
+  if (surveyId) {
+    query += " AND id = ?";
+    params.push(surveyId);
   } else {
-    res.status(404).json({ error: 'Configuration not found' });
+    query += " ORDER BY created_at ASC LIMIT 1"; // Default to the first active survey
   }
+  
+  db.get(query, params, (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (row) {
+      res.json(JSON.parse(row.config_json));
+    } else {
+      res.status(404).json({ error: 'Configuration not found' });
+    }
+  });
 });
 
 // Start/Resume Survey
@@ -150,16 +162,47 @@ app.post('/api/admin/login', (req, res) => {
   });
 });
 
-// Get Survey Config for Admin (protected)
-app.get('/api/admin/config', authenticateAdmin, (req, res) => {
-  const config = JSON.parse(fs.readFileSync(path.join(__dirname, 'survey.json'), 'utf8'));
-  res.json(config);
+// --- ADMIN SURVEYS ROUTES ---
+
+// Get all surveys
+app.get('/api/admin/surveys', authenticateAdmin, (req, res) => {
+  db.all("SELECT id, name, is_active, created_at FROM surveys ORDER BY created_at DESC", [], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
 });
 
-// Update Survey Config
-app.put('/api/admin/config', authenticateAdmin, (req, res) => {
-  fs.writeFileSync(path.join(__dirname, 'survey.json'), JSON.stringify(req.body, null, 2), 'utf8');
-  res.json({ message: 'Config updated' });
+// Get single survey config for admin
+app.get('/api/admin/surveys/:id', authenticateAdmin, (req, res) => {
+  db.get("SELECT * FROM surveys WHERE id = ?", [req.params.id], (err, row) => {
+    if (err) return res.status(500).json({ error: err.message });
+    if (!row) return res.status(404).json({ error: 'Survey not found' });
+    res.json(JSON.parse(row.config_json));
+  });
+});
+
+// Create new survey
+app.post('/api/admin/surveys', authenticateAdmin, (req, res) => {
+  const { name, config } = req.body;
+  const id = 'survey_' + Date.now() + Math.random().toString(36).substr(2, 9);
+  const configJson = JSON.stringify(config);
+  
+  db.run("INSERT INTO surveys (id, name, config_json, is_active) VALUES (?, ?, ?, 1)", [id, name, configJson], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ id, name, message: 'Survey created' });
+  });
+});
+
+// Update survey config
+app.put('/api/admin/surveys/:id', authenticateAdmin, (req, res) => {
+  const { name, config, is_active } = req.body;
+  const configJson = JSON.stringify(config);
+  
+  db.run("UPDATE surveys SET name = ?, config_json = ?, is_active = ? WHERE id = ?", 
+    [name || config.surveyName, configJson, is_active === false ? 0 : 1, req.params.id], function(err) {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json({ message: 'Survey updated' });
+  });
 });
 
 // Upload Image
@@ -173,7 +216,15 @@ app.post('/api/admin/upload', authenticateAdmin, upload.single('image'), (req, r
 
 // Export Data
 app.get('/api/admin/export', authenticateAdmin, (req, res) => {
-  db.all("SELECT * FROM responses", [], async (err, rows) => {
+  const surveyId = req.query.survey_id;
+  let query = "SELECT * FROM responses";
+  let params = [];
+  if (surveyId) {
+    query += " WHERE survey_id = ?";
+    params.push(surveyId);
+  }
+  
+  db.all(query, params, async (err, rows) => {
     if (err) return res.status(500).send(err.message);
 
     const workbook = new exceljs.Workbook();

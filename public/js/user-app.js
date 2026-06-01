@@ -63,7 +63,11 @@ const UserApp = (() => {
 
     const loadConfig = async () => {
         try {
-            const res = await fetch(`${BASE_URL}/api/survey/config`, {
+            const urlParams = new URLSearchParams(window.location.search);
+            const surveyParam = urlParams.get('survey');
+            const apiUrl = surveyParam ? `${BASE_URL}/api/survey/config?id=${surveyParam}` : `${BASE_URL}/api/survey/config`;
+
+            const res = await fetch(apiUrl, {
                 credentials: 'include',
                 cache: 'no-store',
                 headers: {
