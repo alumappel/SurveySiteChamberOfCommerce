@@ -20,9 +20,32 @@ body {
   transition: background-color 0.3s ease;
 }
 
+/* Override Bootstrap Primary Colors */
+.bg-primary { background-color: var(--primary-color) !important; }
+.text-primary { color: var(--primary-color) !important; }
+.btn-primary { 
+  background-color: var(--primary-color) !important; 
+  border-color: var(--primary-color) !important; 
+}
+.btn-primary:hover, .btn-primary:focus {
+  background-color: #003366 !important; 
+  border-color: #003366 !important;
+}
+.btn-outline-primary {
+  color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+.btn-outline-primary:hover {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+.border-primary { border-color: var(--primary-color) !important; }
+.badge.bg-primary { background-color: var(--primary-color) !important; }
+.bg-primary-soft { background-color: rgba(0, 68, 139, 0.1) !important; }
+
 /* Modern Hero Section Styling */
 .bg-primary-soft {
-  background-color: rgba(13, 110, 253, 0.1);
+  background-color: rgba(0, 68, 139, 0.1);
 }
 
 .play-btn-pulse {
@@ -285,7 +308,6 @@ body {
 
 /* Page lock rules to prevent overflow */
 .survey-page-body {
-  height: 100vh !important;
-  max-height: 100vh !important;
-  overflow: hidden !important;
+  min-height: 100vh !important;
+  overflow-x: hidden !important;
 }

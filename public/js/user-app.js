@@ -73,7 +73,7 @@ const UserApp = (() => {
         const formFields = document.getElementById('form-fields');
         config.openingForm.fields.forEach(field => {
             const div = document.createElement('div');
-            div.className = 'mb-3 text-end';
+            div.className = 'mb-3 text-start';
             
             const label = document.createElement('label');
             label.className = 'form-label fw-bold';
@@ -279,7 +279,7 @@ const UserApp = (() => {
 
         // Last card gets a finish submit button
         const isLastCard = index === activeTopics.length - 1;
-        const buttonText = isLastCard ? 'הגש סקר <i class="bi bi-check-lg ms-1"></i>' : 'המשך <i class="bi bi-chevron-left"></i>';
+        const buttonText = isLastCard ? 'הגשת הסקר <i class="bi bi-check-lg ms-1"></i>' : 'להמשך <i class="bi bi-chevron-left"></i>';
         const buttonClass = isLastCard ? 'btn-success btn-finish-survey' : 'btn-next';
 
         return `
