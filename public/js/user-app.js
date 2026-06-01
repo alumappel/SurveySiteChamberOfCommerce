@@ -107,6 +107,34 @@ const UserApp = (() => {
         }, config.idle.timeoutSeconds * 1000);
     };
 
+    const getMediaElement = (url) => {
+        if (!url) return '';
+        
+        // YouTube URL parsing
+        const ytReg = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+        const ytMatch = url.match(ytReg);
+        if (ytMatch && ytMatch[1]) {
+            const videoId = ytMatch[1];
+            return `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 20px; width: 100%; height: 100%;"></iframe>`;
+        }
+        
+        // Vimeo URL parsing
+        const vimeoReg = /(?:vimeo\.com\/(?:channels\/[^\/]+\/|groups\/[^\/]+\/album\/\d+\/video\/|video\/|)|player\.vimeo\.com\/video\/)(\d+)/i;
+        const vimeoMatch = url.match(vimeoReg);
+        if (vimeoMatch && vimeoMatch[1]) {
+            const videoId = vimeoMatch[1];
+            return `<iframe src="https://player.vimeo.com/video/${videoId}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="border-radius: 20px; width: 100%; height: 100%;"></iframe>`;
+        }
+        
+        // Direct video format
+        if (/\.(mp4|webm|ogg|mov)$/i.test(url)) {
+            return `<video src="${url}" controls style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;"></video>`;
+        }
+        
+        // Image format
+        return `<img src="${url}" alt="Intro Visual" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;" onerror="this.style.display='none';">`;
+    };
+
     const initIndex = async () => {
         await loadConfig();
         if (!config) return;
@@ -114,6 +142,18 @@ const UserApp = (() => {
         document.getElementById('intro-title').textContent = config.intro.title;
         // The text has newlines, use innerText or split by \n
         document.getElementById('intro-body').innerHTML = config.intro.body.replace(/\n/g, '<br/>');
+
+        if (config.intro && config.intro.introVideoUrl) {
+            const container = document.querySelector('.media-placeholder-container');
+            if (container) {
+                const mediaHtml = getMediaElement(config.intro.introVideoUrl);
+                if (mediaHtml) {
+                    container.innerHTML = mediaHtml;
+                    container.style.padding = '0';
+                    container.style.background = 'none';
+                }
+            }
+        }
 
         const formFields = document.getElementById('form-fields');
         config.openingForm.fields.forEach(field => {

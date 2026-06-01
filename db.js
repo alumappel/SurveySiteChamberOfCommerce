@@ -48,10 +48,10 @@ db.serialize(() => {
   )`);
 
   // Insert default admin user if not exists (username: admin, password: password123)
-  // Note: bcrypt.hashSync('password123', 10) = $2a$10$C82o22c/969q.T8v6Q7rbuCxyb/64l/D5bL9R8s60A.Y.A.z/y9Yq
+  // Note: bcrypt.hashSync('password123', 10) = $2a$10$wYu2zh047bQZ2dmhCJ9wQuWLUUwagopdEk1Cby1JtkhAFX61SkEku
   db.get("SELECT * FROM admin_users WHERE username = ?", ['admin'], (err, row) => {
     if (!row) {
-      db.run("INSERT INTO admin_users (username, password_hash) VALUES (?, ?)", ['admin', '$2a$10$C82o22c/969q.T8v6Q7rbuCxyb/64l/D5bL9R8s60A.Y.A.z/y9Yq']);
+      db.run("INSERT INTO admin_users (username, password_hash) VALUES (?, ?)", ['admin', '$2a$10$wYu2zh047bQZ2dmhCJ9wQuWLUUwagopdEk1Cby1JtkhAFX61SkEku']);
     }
   });
 });

@@ -39,48 +39,77 @@ const AdminApp = (() => {
         });
     };
 
+    const getMediaElement = (url) => {
+        if (!url) return '';
+        
+        // YouTube URL parsing
+        const ytReg = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
+        const ytMatch = url.match(ytReg);
+        if (ytMatch && ytMatch[1]) {
+            const videoId = ytMatch[1];
+            return `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 12px; width: 100%; height: 100%;"></iframe>`;
+        }
+        
+        // Vimeo URL parsing
+        const vimeoReg = /(?:vimeo\.com\/(?:channels\/[^\/]+\/|groups\/[^\/]+\/album\/\d+\/video\/|video\/|)|player\.vimeo\.com\/video\/)(\d+)/i;
+        const vimeoMatch = url.match(vimeoReg);
+        if (vimeoMatch && vimeoMatch[1]) {
+            const videoId = vimeoMatch[1];
+            return `<iframe src="https://player.vimeo.com/video/${videoId}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="border-radius: 12px; width: 100%; height: 100%;"></iframe>`;
+        }
+        
+        // Direct video format
+        if (/\.(mp4|webm|ogg|mov)$/i.test(url)) {
+            return `<video src="${url}" controls style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;"></video>`;
+        }
+        
+        // Image format
+        return `<img src="${url}" alt="Intro Visual" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px;" onerror="this.style.display='none';">`;
+    };
+
+    const showVideoPreview = (url) => {
+        const previewContainer = document.getElementById('video-preview-container');
+        const wrapper = document.getElementById('video-preview-iframe-wrapper');
+        if (!previewContainer || !wrapper) return;
+        
+        if (!url) {
+            previewContainer.classList.add('d-none');
+            return;
+        }
+        
+        const mediaHtml = getMediaElement(url);
+        if (mediaHtml) {
+            wrapper.innerHTML = mediaHtml;
+            previewContainer.classList.remove('d-none');
+        } else {
+            previewContainer.classList.add('d-none');
+        }
+    };
+
+    const updateVideoUrl = () => {
+        const url = document.getElementById('video-url-input').value.trim();
+        if (!url) {
+            alert('אנא הזן כתובת URL תקינה');
+            return;
+        }
+        
+        const jsonEditor = document.getElementById('json-editor');
+        try {
+            const config = JSON.parse(jsonEditor.value);
+            if (!config.intro) config.intro = {};
+            config.intro.introVideoUrl = url;
+            jsonEditor.value = JSON.stringify(config, null, 2);
+            showVideoPreview(url);
+            alert('כתובת הסרטון עודכנה בהצלחה בעורך ה-JSON! אל תשכח ללחוץ על "שמור שינויים"');
+        } catch (e) {
+            alert('לא ניתן לעדכן את ה-URL: שגיאה בתחביר ה-JSON בעורך.');
+        }
+    };
+
     const initDashboard = async () => {
         if (!checkAuth()) return;
         
         await loadConfigIntoEditor();
-
-        // Setup image upload
-        const uploadForm = document.getElementById('image-upload-form');
-        uploadForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const fileInput = document.getElementById('image-file');
-            const file = fileInput.files[0];
-            if (!file) return;
-
-            // Check file size (2MB max)
-            if (file.size > 2 * 1024 * 1024) {
-                alert('הקובץ חורג מ-2MB');
-                return;
-            }
-
-            const formData = new FormData();
-            formData.append('image', file);
-
-            try {
-                const res = await fetch(`${BASE_URL}/api/admin/upload`, {
-                    method: 'POST',
-                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('admin_token') },
-                    body: formData
-                });
-                
-                if (res.ok) {
-                    const data = await res.json();
-                    const resultDiv = document.getElementById('upload-result');
-                    resultDiv.classList.remove('d-none');
-                    resultDiv.innerHTML = `תמונה הועלתה בהצלחה. העתק את הקישור הבא והדבק ב-JSON: <br> <strong>${data.url}</strong>`;
-                } else {
-                    alert('שגיאה בהעלאת התמונה');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('שגיאת תקשורת');
-            }
-        });
     };
 
     const loadConfigIntoEditor = async () => {
@@ -91,6 +120,15 @@ const AdminApp = (() => {
             if (res.ok) {
                 const config = await res.json();
                 document.getElementById('json-editor').value = JSON.stringify(config, null, 2);
+                
+                // Pre-populate video URL if exists
+                if (config.intro && config.intro.introVideoUrl) {
+                    const videoInput = document.getElementById('video-url-input');
+                    if (videoInput) {
+                        videoInput.value = config.intro.introVideoUrl;
+                        showVideoPreview(config.intro.introVideoUrl);
+                    }
+                }
             }
         } catch (err) {
             console.error(err);
@@ -170,6 +208,7 @@ const AdminApp = (() => {
         saveConfig,
         exportData,
         switchTab,
-        logout
+        logout,
+        updateVideoUrl
     };
 })();

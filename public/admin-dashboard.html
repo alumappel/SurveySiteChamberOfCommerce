@@ -48,17 +48,25 @@
                     </div>
                     <button class="btn btn-primary" onclick="AdminApp.saveConfig()">שמור שינויים</button>
                     
-                    <hr class="my-4">
-                    
-                    <h4>העלאת תמונה לנושא</h4>
-                    <form id="image-upload-form" class="mt-3">
+                    <h4>סרטון הסבר לטופס הפתיחה</h4>
+                    <div class="mt-3">
                         <div class="mb-3">
-                            <label for="image-file" class="form-label">בחר תמונה (WebP/JPG/PNG עד 2MB)</label>
-                            <input class="form-control" type="file" id="image-file" accept=".jpg,.jpeg,.png,.webp" required>
+                            <label for="video-url-input" class="form-label">כתובת URL של סרטון (מיוטיוב, וימאו או קישור ישיר)</label>
+                            <div class="input-group">
+                                <input type="text" id="video-url-input" class="form-control text-start" dir="ltr" placeholder="https://www.youtube.com/watch?v=...">
+                                <button type="button" class="btn btn-secondary" onclick="AdminApp.updateVideoUrl()">עדכן סרטון ב-JSON</button>
+                            </div>
+                            <div class="form-text text-muted mt-1">
+                                הקישור יעודכן אוטומטית בעורך ה-JSON למעלה. זכור ללחוץ על "שמור שינויים" בסיום.
+                            </div>
                         </div>
-                        <button type="submit" class="btn btn-secondary">העלה תמונה וקבל קישור</button>
-                        <div id="upload-result" class="mt-3 alert alert-info d-none"></div>
-                    </form>
+                        <div id="video-preview-container" class="mt-3 p-3 bg-light rounded d-none">
+                            <h6 class="mb-2">תצוגה מקדימה:</h6>
+                            <div id="video-preview-iframe-wrapper" class="ratio ratio-16x9 mx-auto" style="max-width: 480px; height: 270px;">
+                                <!-- Iframe / Video / Image loaded here -->
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
