@@ -48,18 +48,56 @@ const UserApp = (() => {
         document.cookie = name + "=" + (value || "") + expires + "; path=/";
     };
 
+    // const loadConfig = async () => {
+    //     try {
+    //         // const res = await fetch(`${BASE_URL}/api/survey/config`);
+    //         const res = await fetch(`${BASE_URL}/api/survey/config`, FETCH_OPTIONS);
+    //         config = await res.json();
+    //         activeTopics = config.topics.filter(t => t.isActive);
+    //         surveyState.survey_id = config.surveyId;
+    //     } catch (e) {
+    //         console.error('Failed to load config', e);
+    //         document.body.innerHTML = '<h1 class="text-center mt-5">שגיאה בטעינת הסקר</h1>';
+    //     }
+    // };
+
     const loadConfig = async () => {
         try {
-            // const res = await fetch(`${BASE_URL}/api/survey/config`);
-            const res = await fetch(`${BASE_URL}/api/survey/config`, FETCH_OPTIONS);
-            config = await res.json();
+            document.body.innerHTML = '<h1 class="text-center mt-5">בודק חיבור לשרת...</h1>';
+
+            const res = await fetch(`${BASE_URL}/api/survey/config`, {
+                credentials: 'include',
+                cache: 'no-store',
+                headers: {
+                    'ngrok-skip-browser-warning': '1'
+                }
+            });
+
+            const text = await res.text();
+
+            if (!res.ok) {
+                throw new Error(`Server returned ${res.status}: ${text.slice(0, 300)}`);
+            }
+
+            config = JSON.parse(text);
             activeTopics = config.topics.filter(t => t.isActive);
             surveyState.survey_id = config.surveyId;
+
+            document.body.innerHTML = '';
         } catch (e) {
             console.error('Failed to load config', e);
-            document.body.innerHTML = '<h1 class="text-center mt-5">שגיאה בטעינת הסקר</h1>';
+            document.body.innerHTML = `
+            <div style="direction: rtl; padding: 20px; font-family: Arial;">
+                <h1>שגיאה בטעינת הסקר</h1>
+                <p><strong>BASE_URL:</strong></p>
+                <pre>${BASE_URL}</pre>
+                <p><strong>שגיאה:</strong></p>
+                <pre style="white-space: pre-wrap;">${e.message}</pre>
+            </div>
+        `;
         }
     };
+
 
     const resetIdleTimer = () => {
         if (!config || !config.idle) return;
