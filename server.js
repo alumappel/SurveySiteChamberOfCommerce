@@ -29,7 +29,9 @@ const COOKIE_OPTIONS = {
 
 // Middleware
 const allowedOrigins = [
-  'https://alumappel.github.io'
+  'https://alumappel.github.io',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000'
 ];
 
 app.set('trust proxy', 1);
