@@ -12,8 +12,33 @@ const db = require('./db');
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+const COOKIE_OPTIONS = {
+  httpOnly: true,
+  secure: true,
+  sameSite: 'none',
+  maxAge: 30 * 24 * 60 * 60 * 1000
+};
+
+// // Middleware
+// app.use(cors());
+// app.use(bodyParser.json());
+// app.use(cookieParser());
+// app.use(express.static(path.join(__dirname, 'public')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
+
 // Middleware
-app.use(cors());
+const allowedOrigins = [
+  'https://alumappel.github.io'
+];
+
+app.set('trust proxy', 1);
+
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
+
 app.use(bodyParser.json());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -62,17 +87,22 @@ app.get('/api/survey/config', (req, res) => {
 app.post('/api/survey/start', (req, res) => {
   const { respondent_id, survey_id, business_name, business_sector, employee_count } = req.body;
   const response_id = 'resp_' + Date.now() + Math.random().toString(36).substr(2, 9);
-  
+
+  if (respondent_id) {
+    res.cookie('respondent_id', respondent_id, COOKIE_OPTIONS);
+  }
+
+
   db.get("SELECT * FROM responses WHERE respondent_id = ? AND status IN ('in_progress', 'abandoned')", [respondent_id], (err, row) => {
     if (row) {
       res.json({ message: 'Resumed', response_id: row.response_id, data: row });
     } else {
       db.run(`INSERT INTO responses (response_id, respondent_id, survey_id, business_name, business_sector, employee_count, status, started_at) 
-              VALUES (?, ?, ?, ?, ?, ?, 'in_progress', CURRENT_TIMESTAMP)`, 
-              [response_id, respondent_id, survey_id, business_name, business_sector, employee_count], (err) => {
-        if (err) return res.status(500).json({ error: err.message });
-        res.json({ message: 'Started', response_id });
-      });
+              VALUES (?, ?, ?, ?, ?, ?, 'in_progress', CURRENT_TIMESTAMP)`,
+        [response_id, respondent_id, survey_id, business_name, business_sector, employee_count], (err) => {
+          if (err) return res.status(500).json({ error: err.message });
+          res.json({ message: 'Started', response_id });
+        });
     }
   });
 });
@@ -81,18 +111,18 @@ app.post('/api/survey/start', (req, res) => {
 app.put('/api/survey/update/:response_id', (req, res) => {
   const { response_id } = req.params;
   const { topic_ratings_json, last_answered_topic_index, last_answered_topic_id, status } = req.body;
-  
+
   let query = `UPDATE responses SET topic_ratings_json = ?, last_answered_topic_index = ?, last_answered_topic_id = ?, status = ?, updated_at = CURRENT_TIMESTAMP`;
   let params = [topic_ratings_json, last_answered_topic_index, last_answered_topic_id, status];
-  
+
   if (status === 'completed') {
     query += `, completed_at = CURRENT_TIMESTAMP`;
   }
-  
+
   query += ` WHERE response_id = ?`;
   params.push(response_id);
-  
-  db.run(query, params, function(err) {
+
+  db.run(query, params, function (err) {
     if (err) return res.status(500).json({ error: err.message });
     res.json({ message: 'Updated' });
   });
@@ -137,10 +167,10 @@ app.post('/api/admin/upload', authenticateAdmin, upload.single('image'), (req, r
 app.get('/api/admin/export', authenticateAdmin, (req, res) => {
   db.all("SELECT * FROM responses", [], async (err, rows) => {
     if (err) return res.status(500).send(err.message);
-    
+
     const workbook = new exceljs.Workbook();
     const worksheet = workbook.addWorksheet('Responses');
-    
+
     worksheet.columns = [
       { header: 'ID', key: 'response_id', width: 20 },
       { header: 'Business Name', key: 'business_name', width: 20 },
@@ -151,12 +181,12 @@ app.get('/api/admin/export', authenticateAdmin, (req, res) => {
       { header: 'Completed', key: 'completed_at', width: 20 },
       { header: 'Ratings', key: 'topic_ratings_json', width: 50 }
     ];
-    
+
     rows.forEach(row => worksheet.addRow(row));
-    
+
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=' + 'survey_responses.xlsx');
-    
+
     await workbook.xlsx.write(res);
     res.end();
   });

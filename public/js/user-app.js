@@ -1,5 +1,12 @@
 const UserApp = (() => {
-    const BASE_URL = 'http://localhost:3000'; // ערוך לכתובת השרת האמיתי בסביבת פרודקשן
+    // const BASE_URL = 'http://localhost:3000'; // כתובת לוקאלהוסט
+    const BASE_URL = 'https://remote-defiance-unpainted.ngrok-free.dev'; // כתובת ngrok
+
+    const FETCH_OPTIONS = {
+        credentials: 'include'
+    };
+
+
     let config = null;
     let surveyState = {
         respondent_id: '',
@@ -40,7 +47,8 @@ const UserApp = (() => {
 
     const loadConfig = async () => {
         try {
-            const res = await fetch(`${BASE_URL}/api/survey/config`);
+            // const res = await fetch(`${BASE_URL}/api/survey/config`);
+            const res = await fetch(`${BASE_URL}/api/survey/config`, FETCH_OPTIONS);
             config = await res.json();
             activeTopics = config.topics.filter(t => t.isActive);
             surveyState.survey_id = config.surveyId;
@@ -74,12 +82,12 @@ const UserApp = (() => {
         config.openingForm.fields.forEach(field => {
             const div = document.createElement('div');
             div.className = 'mb-3 text-start';
-            
+
             const label = document.createElement('label');
             label.className = 'form-label fw-bold';
             label.textContent = field.label;
             if (field.required) label.textContent += ' *';
-            
+
             div.appendChild(label);
 
             if (field.type === 'select') {
@@ -87,7 +95,7 @@ const UserApp = (() => {
                 select.className = 'form-select';
                 select.name = field.name;
                 select.required = field.required;
-                
+
                 const defaultOption = document.createElement('option');
                 defaultOption.value = '';
                 defaultOption.textContent = 'בחר...';
@@ -147,12 +155,13 @@ const UserApp = (() => {
             try {
                 const res = await fetch(`${BASE_URL}/api/survey/start`, {
                     method: 'POST',
+                    credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
                 const result = await res.json();
                 surveyState.response_id = result.response_id;
-                
+
                 // Save to local storage to pass to survey page
                 localStorage.setItem('surveyState', JSON.stringify(surveyState));
                 window.location.href = 'survey.html';
@@ -172,7 +181,7 @@ const UserApp = (() => {
             window.location.href = 'index.html';
             return;
         }
-        
+
         surveyState = JSON.parse(storedState);
 
         // Tooltip init
@@ -194,7 +203,7 @@ const UserApp = (() => {
         if (surveyState.last_answered_topic_index >= 0 && surveyState.status === 'in_progress') {
             const modalEl = document.getElementById('welcomeBackModal');
             const welcomeModal = new bootstrap.Modal(modalEl);
-            
+
             document.getElementById('btn-continue-survey').addEventListener('click', () => {
                 currentTopicIndex = surveyState.last_answered_topic_index + 1;
                 if (currentTopicIndex >= activeTopics.length) {
@@ -225,9 +234,9 @@ const UserApp = (() => {
             const btn = document.getElementById('btn-submit-comment');
             btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> שולח...';
             btn.disabled = true;
-            
+
             await saveProgress();
-            
+
             document.getElementById('final-comment-section').innerHTML = '<p class="text-success fw-bold">תגובתך נשמרה בהצלחה. תודה!</p>';
         });
 
@@ -320,25 +329,25 @@ const UserApp = (() => {
     const updateCarousel = () => {
         const track = document.getElementById('survey-container');
         if (!track) return;
-        
+
         const isRtl = document.documentElement.dir === 'rtl' || document.body.dir === 'rtl';
         const activeCard = track.querySelector('.topic-card-wrapper');
         const cardWidth = activeCard ? activeCard.offsetWidth : 550;
         const gap = 24; // matches gap in CSS
-        
+
         // Compute horizontal offset
         // In RTL, positive translateX shifts elements to the right, showing next items on left.
         const directionMultiplier = isRtl ? 1 : -1;
         const translateAmount = currentTopicIndex * (cardWidth + gap) * directionMultiplier;
-        
+
         track.style.transform = `translateX(${translateAmount}px)`;
-        
+
         // Update active vs inactive card states
         const wrappers = track.querySelectorAll('.topic-card-wrapper');
         wrappers.forEach((wrapper, idx) => {
             const cardInner = wrapper.querySelector('.topic-card-bg');
             if (!cardInner) return;
-            
+
             if (idx === currentTopicIndex) {
                 cardInner.classList.add('active-card');
                 cardInner.classList.remove('inactive-card');
@@ -354,7 +363,7 @@ const UserApp = (() => {
                 });
             }
         });
-        
+
         // Update Progress Bar
         const progressPercent = Math.round(((currentTopicIndex) / activeTopics.length) * 100);
         const progressBar = document.getElementById('survey-progress');
@@ -368,7 +377,7 @@ const UserApp = (() => {
         const btnPrev = document.getElementById('carousel-btn-prev');
         const btnNext = document.getElementById('carousel-btn-next');
         if (!btnPrev || !btnNext) return;
-        
+
         // Prev arrow behavior
         if (currentTopicIndex === 0) {
             btnPrev.classList.add('disabled');
@@ -377,12 +386,12 @@ const UserApp = (() => {
             btnPrev.classList.remove('disabled');
             btnPrev.disabled = false;
         }
-        
+
         // Next arrow behavior
         const currentTopic = activeTopics[currentTopicIndex];
         const hasRatedCurrent = surveyState.topic_ratings[currentTopic?.id] !== undefined;
         const isLast = currentTopicIndex === activeTopics.length - 1;
-        
+
         if (isLast || !hasRatedCurrent) {
             btnNext.classList.add('disabled');
             btnNext.disabled = true;
@@ -395,10 +404,10 @@ const UserApp = (() => {
     const renderTopics = () => {
         const container = document.getElementById('survey-container');
         const outerContainer = document.getElementById('carousel-outer-container');
-        
+
         if (outerContainer) outerContainer.style.display = 'block';
         document.getElementById('desktop-submit-container').classList.add('d-none');
-        
+
         container.innerHTML = '';
         container.style.display = 'flex';
         container.className = 'carousel-track';
@@ -469,13 +478,13 @@ const UserApp = (() => {
                 const val = e.target.value;
                 const display = document.getElementById(`display-${topicId}`);
                 const card = document.getElementById(`card-${topicId}`);
-                
+
                 e.target.classList.remove('empty-state');
                 display.textContent = val;
-                
-                const percent = val; 
+
+                const percent = val;
                 display.style.top = `${100 - percent}%`;
-                
+
                 card.style.backgroundColor = getHslColor(val);
 
                 // Enable button inside active card
@@ -495,7 +504,7 @@ const UserApp = (() => {
                 const topicId = e.target.getAttribute('data-topic-id');
                 const idx = parseInt(e.target.getAttribute('data-index'));
                 surveyState.topic_ratings[topicId] = parseInt(e.target.value, 10);
-                
+
                 if (idx > surveyState.last_answered_topic_index) {
                     surveyState.last_answered_topic_index = idx;
                 }
@@ -560,6 +569,7 @@ const UserApp = (() => {
         try {
             await fetch(`${BASE_URL}/api/survey/update/${surveyState.response_id}`, {
                 method: 'PUT',
+                credentials: 'include',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     topic_ratings_json: JSON.stringify(surveyState.topic_ratings),
@@ -577,17 +587,17 @@ const UserApp = (() => {
     const showCompletion = () => {
         const outerContainer = document.getElementById('carousel-outer-container');
         if (outerContainer) outerContainer.style.display = 'none';
-        
+
         document.getElementById('survey-container').style.display = 'none';
         document.getElementById('desktop-submit-container').classList.add('d-none');
-        
+
         const comp = document.getElementById('completion-container');
         comp.style.display = 'block';
         comp.classList.add('fade-in');
-        
+
         document.getElementById('completion-title').textContent = config.completion.title;
         document.getElementById('completion-message').textContent = config.completion.message;
-        
+
         if (surveyState.final_comment) {
             document.getElementById('final-comment-section').innerHTML = '<p class="text-success fw-bold">תגובתך נשמרה.</p>';
         }
