@@ -217,37 +217,96 @@ app.post('/api/admin/upload', authenticateAdmin, upload.single('image'), (req, r
 // Export Data
 app.get('/api/admin/export', authenticateAdmin, (req, res) => {
   const surveyId = req.query.survey_id;
-  let query = "SELECT * FROM responses";
-  let params = [];
-  if (surveyId) {
-    query += " WHERE survey_id = ?";
-    params.push(surveyId);
-  }
   
-  db.all(query, params, async (err, rows) => {
+  // First, get survey configs to map topic IDs to titles
+  db.all("SELECT id, config_json FROM surveys", [], (err, surveyRows) => {
     if (err) return res.status(500).send(err.message);
+    
+    const topicIdToTitle = {};
+    const orderedTopicsForSurvey = [];
 
-    const workbook = new exceljs.Workbook();
-    const worksheet = workbook.addWorksheet('Responses');
+    surveyRows.forEach(s => {
+       try {
+           const config = JSON.parse(s.config_json);
+           if (config && config.topics) {
+               config.topics.forEach(t => {
+                   topicIdToTitle[t.id] = t.title || t.id;
+                   if (surveyId && s.id === surveyId) {
+                       orderedTopicsForSurvey.push(t.id);
+                   }
+               });
+           }
+       } catch (e) {
+           console.error("Failed to parse survey config", e);
+       }
+    });
 
-    worksheet.columns = [
-      { header: 'ID', key: 'response_id', width: 20 },
-      { header: 'Business Name', key: 'business_name', width: 20 },
-      { header: 'Sector', key: 'business_sector', width: 15 },
-      { header: 'Employees', key: 'employee_count', width: 15 },
-      { header: 'Status', key: 'status', width: 15 },
-      { header: 'Started', key: 'started_at', width: 20 },
-      { header: 'Completed', key: 'completed_at', width: 20 },
-      { header: 'Ratings', key: 'topic_ratings_json', width: 50 }
-    ];
+    let query = "SELECT * FROM responses";
+    let params = [];
+    if (surveyId) {
+      query += " WHERE survey_id = ?";
+      params.push(surveyId);
+    }
+    
+    db.all(query, params, async (err, rows) => {
+      if (err) return res.status(500).send(err.message);
 
-    rows.forEach(row => worksheet.addRow(row));
+      rows.forEach(row => {
+          try {
+              row.ratings = JSON.parse(row.topic_ratings_json || '{}');
+          } catch (e) {
+              row.ratings = {};
+          }
+      });
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=' + 'survey_responses.xlsx');
+      let orderedTopicIds = [];
+      if (surveyId && orderedTopicsForSurvey.length > 0) {
+          orderedTopicIds = orderedTopicsForSurvey;
+      } else {
+          const topicIds = new Set();
+          rows.forEach(row => {
+              Object.keys(row.ratings).forEach(topicId => topicIds.add(topicId));
+          });
+          orderedTopicIds = Array.from(topicIds);
+      }
 
-    await workbook.xlsx.write(res);
-    res.end();
+      const workbook = new exceljs.Workbook();
+      const worksheet = workbook.addWorksheet('Responses');
+
+      const columns = [
+        { header: 'ID', key: 'response_id', width: 20 },
+        { header: 'Business Name', key: 'business_name', width: 20 },
+        { header: 'Sector', key: 'business_sector', width: 15 },
+        { header: 'Employees', key: 'employee_count', width: 15 },
+        { header: 'Status', key: 'status', width: 15 },
+        { header: 'Started', key: 'started_at', width: 20 },
+        { header: 'Completed', key: 'completed_at', width: 20 }
+      ];
+
+      orderedTopicIds.forEach(topicId => {
+          columns.push({
+             header: topicIdToTitle[topicId] || topicId,
+             key: `topic_${topicId}`,
+             width: 25
+          });
+      });
+
+      worksheet.columns = columns;
+
+      rows.forEach(row => {
+          const rowData = { ...row };
+          orderedTopicIds.forEach(topicId => {
+              rowData[`topic_${topicId}`] = row.ratings[topicId] !== undefined ? row.ratings[topicId] : '';
+          });
+          worksheet.addRow(rowData);
+      });
+
+      res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+      res.setHeader('Content-Disposition', 'attachment; filename=' + (surveyId ? `survey_responses_${surveyId}.xlsx` : 'survey_responses.xlsx'));
+
+      await workbook.xlsx.write(res);
+      res.end();
+    });
   });
 });
 
