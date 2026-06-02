@@ -653,7 +653,7 @@ const AdminApp = (() => {
 
     const pieLabelsPlugin = {
         id: 'pieLabels',
-        afterDraw(chart, args, options) {
+        afterDatasetsDraw(chart, args, options) {
             const { ctx, data } = chart;
             ctx.save();
             ctx.font = 'bold 13px sans-serif';
@@ -676,7 +676,7 @@ const AdminApp = (() => {
 
     const barLabelsAndErrorsPlugin = {
         id: 'barLabelsAndErrors',
-        afterDraw(chart, args, options) {
+        afterDatasetsDraw(chart, args, options) {
             const { ctx, data } = chart;
             ctx.save();
             ctx.textAlign = 'center';
@@ -797,6 +797,21 @@ const AdminApp = (() => {
         document.querySelectorAll('.filter-sector-chk, .filter-size-chk, .filter-service-chk').forEach(chk => {
             chk.addEventListener('change', updateComparisonChart);
         });
+    };
+
+    const resetComparisonFilters = () => {
+        document.querySelectorAll('.filter-sector-chk, .filter-size-chk').forEach(chk => chk.checked = false);
+        document.querySelectorAll('.filter-service-chk').forEach(chk => chk.checked = true);
+        updateComparisonChart();
+    };
+
+    const exportCurrentDashboardSurvey = () => {
+        const select = document.getElementById('results-survey-select');
+        if (select && select.value) {
+            exportSurveyData(select.value);
+        } else {
+            alert('אנא בחר שאלון תחילה');
+        }
     };
 
     const updateComparisonChart = () => {
@@ -929,6 +944,8 @@ const AdminApp = (() => {
         openDashboard,
         loadSurveyResults,
         updateComparisonChart,
+        resetComparisonFilters,
+        exportCurrentDashboardSurvey,
         logout,
         updateVideoUrl,
         loadSurveysList,

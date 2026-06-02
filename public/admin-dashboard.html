@@ -133,9 +133,12 @@
                 <div id="section-results" class="card p-4 shadow-sm mb-4 d-none bento-container">
                     <div class="d-flex justify-content-between align-items-center mb-4">
                         <h3 id="results-survey-title">דשבורד תוצאות</h3>
-                        <select id="results-survey-select" class="form-select w-auto" onchange="AdminApp.loadSurveyResults(this.value)">
-                            <option value="">טוען סקרים...</option>
-                        </select>
+                        <div class="d-flex gap-2 align-items-center">
+                            <select id="results-survey-select" class="form-select w-auto" onchange="AdminApp.loadSurveyResults(this.value)">
+                                <option value="">טוען סקרים...</option>
+                            </select>
+                            <button class="btn btn-success" onclick="AdminApp.exportCurrentDashboardSurvey()"><i class="bi bi-file-earmark-excel"></i> ייצוא לאקסל</button>
+                        </div>
                     </div>
 
                     <div id="results-content" class="d-none">
@@ -218,6 +221,7 @@
                                             <ul class="dropdown-menu p-2" id="filter-services-list" style="max-height: 200px; overflow-y: auto;">
                                             </ul>
                                         </div>
+                                        <button class="btn btn-sm btn-outline-danger" onclick="AdminApp.resetComparisonFilters()" title="אפס סינונים"><i class="bi bi-arrow-counterclockwise"></i> איפוס</button>
                                     </div>
                                 </div>
                                 <div class="chart-container" style="position: relative; height:300px; width:100%">
