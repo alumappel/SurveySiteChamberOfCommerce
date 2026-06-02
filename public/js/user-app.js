@@ -380,14 +380,47 @@ const UserApp = (() => {
         });
     };
 
-    const getHslColor = (percent) => {
-        const hue = (percent / 100) * 120;
-        return `hsl(${hue}, 80%, 90%)`; // Light background
+    const getPastelColor = (percent) => {
+        const solidRgbStr = getSolidHslColor(percent);
+        const match = solidRgbStr.match(/rgb\((\d+),\s*(\d+),\s*(\d+)\)/);
+        if (match) {
+            const r = parseInt(match[1]);
+            const g = parseInt(match[2]);
+            const b = parseInt(match[3]);
+            // Mix 15% of the original color with 85% white
+            const mix = (c) => Math.round(c * 0.15 + 255 * 0.85);
+            return `rgb(${mix(r)}, ${mix(g)}, ${mix(b)})`;
+        }
+        return 'transparent';
+    };
+
+    const hexToRgb = (hex) => {
+        let r = 0, g = 0, b = 0;
+        if (hex.length === 7) {
+            r = parseInt(hex.substring(1, 3), 16);
+            g = parseInt(hex.substring(3, 5), 16);
+            b = parseInt(hex.substring(5, 7), 16);
+        }
+        return [r, g, b];
+    };
+
+    const interpolateColor = (color1, color2, factor) => {
+        const c1 = hexToRgb(color1);
+        const c2 = hexToRgb(color2);
+        const result = c1.map((c, i) => Math.round(c + factor * (c2[i] - c)));
+        return `rgb(${result[0]}, ${result[1]}, ${result[2]})`;
     };
 
     const getSolidHslColor = (percent) => {
-        const hue = (percent / 100) * 120;
-        return `hsl(${hue}, 85%, 50%)`; // Solid vivid color
+        const red = '#CC1725';
+        const orange = '#DE7B00';
+        const green = '#2C7125';
+
+        if (percent < 50) {
+            return interpolateColor(red, orange, percent / 50);
+        } else {
+            return interpolateColor(orange, green, (percent - 50) / 50);
+        }
     };
 
     const createTopicCardHtml = (topic, index) => {
@@ -421,7 +454,7 @@ const UserApp = (() => {
                 <div class="card shadow mx-auto p-0 rounded-4 topic-card-bg inactive-card position-relative d-flex flex-row" id="card-${topic.id}" data-topic-id="${topic.id}" data-index="${index}">
                     
                     <!-- Sidebar Area (Right) -->
-                    <div class="sidebar-rating position-relative d-flex flex-shrink-0" style="width: 100px; border-left: 1px solid #dee2e6; z-index: 2;">
+                    <div class="sidebar-rating position-relative d-flex flex-shrink-0" style="width: 100px; border-left: 1px solid #dee2e6; z-index: 2; overflow: hidden;">
                         <div class="fill-level-indicator sidebar-fill" id="fill-sidebar-${topic.id}" style="height: ${hasValue ? val : 0}%; background-color: ${hasValue ? getSolidHslColor(val) : 'transparent'};"></div>
                         
                         <div class="rating-labels-right position-absolute h-100 d-flex flex-column justify-content-between py-4" style="right: 8px; top: 0; pointer-events: none; width: 85px;">
@@ -435,7 +468,7 @@ const UserApp = (() => {
 
                     <!-- Main Content Area (Left) -->
                     <div class="main-card-area position-relative flex-grow-1 d-flex flex-column">
-                        <div class="fill-level-indicator main-fill" id="fill-main-${topic.id}" style="height: ${hasValue ? val : 0}%; background-color: ${hasValue ? getHslColor(val) : 'transparent'};"></div>
+                        <div class="fill-level-indicator main-fill" id="fill-main-${topic.id}" style="height: ${hasValue ? val : 0}%; background-color: ${hasValue ? getPastelColor(val) : 'transparent'};"></div>
                         
                         <div class="inactivity-hint" id="hint-${topic.id}">
                             <i class="bi bi-chevron-up"></i>
@@ -614,7 +647,7 @@ const UserApp = (() => {
                 const fillMain = document.getElementById(`fill-main-${topicId}`);
                 if (fillMain) {
                     fillMain.style.height = `${percent}%`;
-                    fillMain.style.backgroundColor = getHslColor(percent);
+                    fillMain.style.backgroundColor = getPastelColor(percent);
                 }
 
                 const labelTop = document.getElementById(`label-top-${topicId}`);
@@ -622,13 +655,22 @@ const UserApp = (() => {
                 const labelBot = document.getElementById(`label-bot-${topicId}`);
                 
                 if (labelTop && labelMid && labelBot) {
-                    labelTop.classList.remove('active-label');
-                    labelMid.classList.remove('active-label');
-                    labelBot.classList.remove('active-label');
+                    labelTop.classList.remove('active-label', 'covered-label');
+                    labelMid.classList.remove('active-label', 'covered-label');
+                    labelBot.classList.remove('active-label', 'covered-label');
                     
-                    if (percent >= 67) labelTop.classList.add('active-label');
-                    else if (percent >= 34) labelMid.classList.add('active-label');
-                    else labelBot.classList.add('active-label');
+                    if (percent >= 67) {
+                        labelTop.classList.add('active-label');
+                        labelMid.classList.add('covered-label');
+                        labelBot.classList.add('covered-label');
+                    }
+                    else if (percent >= 34) {
+                        labelMid.classList.add('active-label');
+                        labelBot.classList.add('covered-label');
+                    }
+                    else {
+                        labelBot.classList.add('active-label');
+                    }
                 }
 
                 surveyState.topic_ratings[topicId] = percent;

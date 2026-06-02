@@ -12,6 +12,18 @@
   :root {
     --card-width: 82vw;
   }
+  .carousel-nav-btn {
+    width: 34px !important;
+    height: 34px !important;
+    font-size: 1rem !important;
+  }
+  .carousel-nav-btn.prev-btn { right: 2px !important; }
+  .carousel-nav-btn.next-btn { left: 2px !important; }
+}
+
+.text-bg-primary {
+  background-color: var(--primary-color) !important;
+  color: #fff !important;
 }
 
 body {
@@ -211,6 +223,11 @@ body {
   transform-origin: right center;
   font-weight: 800 !important;
   box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.rating-label-small.covered-label {
+  color: #ffffff !important;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
 }
 
 .tick-mark {
