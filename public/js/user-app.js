@@ -381,25 +381,26 @@ const UserApp = (() => {
     };
 
     const getHslColor = (percent) => {
-        // Red to Green
         const hue = (percent / 100) * 120;
         return `hsl(${hue}, 80%, 90%)`; // Light background
+    };
+
+    const getSolidHslColor = (percent) => {
+        const hue = (percent / 100) * 120;
+        return `hsl(${hue}, 85%, 50%)`; // Solid vivid color
     };
 
     const createTopicCardHtml = (topic, index) => {
         const val = surveyState.topic_ratings[topic.id];
         const hasValue = val !== undefined;
-        const displayVal = hasValue ? val : 50;
-        const bgStyle = hasValue ? `background-color: ${getHslColor(displayVal)};` : '';
 
-        // Last card gets a finish submit button, but only when editing
         const isLastCard = index === activeTopics.length - 1;
         const isEditing = surveyState.status === 'edited_after_completion';
         
         let buttonHtml = '';
         if (isLastCard && isEditing) {
             buttonHtml = `
-                <div class="text-center mt-4">
+                <div class="text-center mt-3 z-3 position-absolute bottom-0 start-50 translate-middle-x mb-4" style="pointer-events: auto; width: 100%;">
                     <span class="d-inline-block disabled-wrapper" tabindex="0">
                         <button class="btn btn-success btn-lg rounded-pill px-5 shadow-sm btn-finish-survey ${!hasValue ? 'disabled' : ''}" style="${!hasValue ? 'pointer-events: none;' : ''}">
                             הגשת הסקר <i class="bi bi-check-lg ms-1"></i>
@@ -409,26 +410,43 @@ const UserApp = (() => {
             `;
         }
 
+        let ticksHtml = '<div class="card-ticks position-absolute h-100 top-0 d-flex flex-column justify-content-between py-4" style="left: 0; pointer-events: none; z-index: 1;">';
+        for (let i = 0; i <= 20; i++) {
+            ticksHtml += `<div class="tick-mark ${i % 5 === 0 ? 'major' : ''}"></div>`;
+        }
+        ticksHtml += '</div>';
+
         return `
             <div class="topic-card-wrapper" id="wrapper-${topic.id}">
-                <div class="card shadow mx-auto p-4 rounded-4 topic-card-bg inactive-card" id="card-${topic.id}" style="${bgStyle}">
+                <div class="card shadow mx-auto p-0 rounded-4 topic-card-bg inactive-card position-relative d-flex flex-row" id="card-${topic.id}" data-topic-id="${topic.id}" data-index="${index}">
                     
-                    <div class="text-center mb-3">
-                        ${topic.imageUrl ? `<img src="${topic.imageUrl}" alt="תמונת נושא" class="img-fluid rounded-3 mb-3" style="max-height: 180px; object-fit: cover;">` : ''}
-                        <h3 class="fw-bold mb-2 text-dark">${topic.title}</h3>
-                        <p class="text-muted mb-3" style="min-height: 48px; font-size: 0.95rem;">${topic.description}</p>
+                    <!-- Sidebar Area (Right) -->
+                    <div class="sidebar-rating position-relative d-flex flex-shrink-0" style="width: 100px; border-left: 1px solid #dee2e6; z-index: 2;">
+                        <div class="fill-level-indicator sidebar-fill" id="fill-sidebar-${topic.id}" style="height: ${hasValue ? val : 0}%; background-color: ${hasValue ? getSolidHslColor(val) : 'transparent'};"></div>
+                        
+                        <div class="rating-labels-right position-absolute h-100 d-flex flex-column justify-content-between py-4" style="right: 8px; top: 0; pointer-events: none; width: 85px;">
+                            <span class="fw-bold rating-label-small ${hasValue && val >= 67 ? 'active-label' : ''}" id="label-top-${topic.id}">מאוד רלוונטי!</span>
+                            <span class="fw-bold rating-label-small ${hasValue && val >= 34 && val < 67 ? 'active-label' : ''}" id="label-mid-${topic.id}">מעניין אותי</span>
+                            <span class="fw-bold rating-label-small ${hasValue && val < 34 ? 'active-label' : ''}" id="label-bot-${topic.id}">לא רלוונטי עבורי</span>
+                        </div>
+
+                        ${ticksHtml}
                     </div>
 
-                    <div class="slider-container d-flex flex-row justify-content-center align-items-stretch mx-auto my-2 position-relative" style="height: 220px; width: 100px; direction: ltr;">
-                        <input type="range" class="form-range custom-vertical-slider topic-slider ${!hasValue ? 'empty-state' : ''}" 
-                            data-topic-id="${topic.id}" data-index="${index}"
-                            min="${config.rating.min}" max="${config.rating.max}" value="${displayVal}" step="1">
-                        <div class="slider-labels d-flex flex-column justify-content-between text-muted small ms-3" aria-hidden="true" style="direction: rtl;">
-                            <span class="fw-bold text-success">${config.rating.topLabel}</span>
-                            <span class="fw-bold text-danger">${config.rating.bottomLabel}</span>
+                    <!-- Main Content Area (Left) -->
+                    <div class="main-card-area position-relative flex-grow-1 d-flex flex-column">
+                        <div class="fill-level-indicator main-fill" id="fill-main-${topic.id}" style="height: ${hasValue ? val : 0}%; background-color: ${hasValue ? getHslColor(val) : 'transparent'};"></div>
+                        
+                        <div class="inactivity-hint" id="hint-${topic.id}">
+                            <i class="bi bi-chevron-up"></i>
+                            <div style="height: 4px;"></div>
+                            <i class="bi bi-chevron-down"></i>
                         </div>
-                        <div class="position-absolute translate-middle badge bg-primary fs-5 slider-value-display" id="display-${topic.id}" style="top: ${hasValue ? 100 - displayVal : 50}%; left: -40px;">
-                            ${hasValue ? displayVal : ''}
+
+                        <div class="content-overlay position-relative flex-grow-1 d-flex flex-column justify-content-center align-items-center px-4 text-center" style="pointer-events: none; z-index: 2;">
+                            ${topic.imageUrl ? `<img src="${topic.imageUrl}" alt="תמונת נושא" class="img-fluid rounded-3 mb-4 shadow-sm" draggable="false" style="max-height: 200px; object-fit: cover;">` : ''}
+                            <h2 class="fw-bold mb-3 text-dark" style="font-size: 2.2rem; text-shadow: 0 0 10px rgba(255,255,255,0.8);">${topic.title}</h2>
+                            <p class="text-dark fs-5 mb-0" style="text-shadow: 0 0 10px rgba(255,255,255,0.8);">${topic.description}</p>
                         </div>
                     </div>
                     
@@ -459,16 +477,29 @@ const UserApp = (() => {
         wrappers.forEach((wrapper, idx) => {
             const cardInner = wrapper.querySelector('.topic-card-bg');
             if (!cardInner) return;
+            const topicId = cardInner.getAttribute('data-topic-id');
 
             if (idx === currentTopicIndex) {
                 cardInner.classList.add('active-card');
                 cardInner.classList.remove('inactive-card');
-                cardInner.querySelectorAll('input, button').forEach(el => el.removeAttribute('disabled'));
+                cardInner.querySelectorAll('button').forEach(el => el.removeAttribute('disabled'));
+                
+                if (cardInner._hintTimer) clearTimeout(cardInner._hintTimer);
+                if (surveyState.topic_ratings[topicId] === undefined) {
+                    cardInner._hintTimer = setTimeout(() => {
+                        const hint = document.getElementById(`hint-${topicId}`);
+                        if (hint) hint.classList.add('show');
+                    }, 3000);
+                }
             } else {
                 cardInner.classList.remove('active-card');
                 cardInner.classList.add('inactive-card');
-                cardInner.querySelectorAll('input, button').forEach(el => {
-                    // Disable inactive card controls to prevent issues
+                
+                const hint = document.getElementById(`hint-${topicId}`);
+                if (hint) hint.classList.remove('show');
+                if (cardInner._hintTimer) clearTimeout(cardInner._hintTimer);
+
+                cardInner.querySelectorAll('button').forEach(el => {
                     if (!el.classList.contains('btn-prev')) {
                         el.setAttribute('disabled', 'true');
                     }
@@ -549,50 +580,126 @@ const UserApp = (() => {
     };
 
     const attachDynamicListeners = () => {
-        const sliders = document.querySelectorAll('.topic-slider');
-        sliders.forEach(slider => {
-            slider.addEventListener('input', (e) => {
-                if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
-                const topicId = e.target.getAttribute('data-topic-id');
-                const val = e.target.value;
-                const display = document.getElementById(`display-${topicId}`);
-                const card = document.getElementById(`card-${topicId}`);
+        const cards = document.querySelectorAll('.topic-card-bg');
+        cards.forEach(card => {
+            let isDragging = false;
+            const topicId = card.getAttribute('data-topic-id');
+            const idx = parseInt(card.getAttribute('data-index'));
 
-                e.target.classList.remove('empty-state');
-                display.textContent = val;
+            const updateRatingFromEvent = (e) => {
+                if (card.classList.contains('inactive-card')) return;
+                
+                const hint = document.getElementById(`hint-${topicId}`);
+                if (hint) hint.classList.remove('show');
+                if (card._hintTimer) clearTimeout(card._hintTimer);
 
-                const percent = val;
-                display.style.top = `${100 - percent}%`;
+                const rect = card.getBoundingClientRect();
+                let clientY = e.clientY;
+                if (e.touches && e.touches.length > 0) {
+                    clientY = e.touches[0].clientY;
+                }
+                
+                let yPos = clientY - rect.top;
+                yPos = Math.max(0, Math.min(rect.height, yPos));
+                
+                let percent = 100 - (yPos / rect.height * 100);
+                percent = Math.round(percent);
+                
+                const fillSidebar = document.getElementById(`fill-sidebar-${topicId}`);
+                if (fillSidebar) {
+                    fillSidebar.style.height = `${percent}%`;
+                    fillSidebar.style.backgroundColor = getSolidHslColor(percent);
+                }
 
-                card.style.backgroundColor = getHslColor(val);
+                const fillMain = document.getElementById(`fill-main-${topicId}`);
+                if (fillMain) {
+                    fillMain.style.height = `${percent}%`;
+                    fillMain.style.backgroundColor = getHslColor(percent);
+                }
 
-                // Enable button inside active card
+                const labelTop = document.getElementById(`label-top-${topicId}`);
+                const labelMid = document.getElementById(`label-mid-${topicId}`);
+                const labelBot = document.getElementById(`label-bot-${topicId}`);
+                
+                if (labelTop && labelMid && labelBot) {
+                    labelTop.classList.remove('active-label');
+                    labelMid.classList.remove('active-label');
+                    labelBot.classList.remove('active-label');
+                    
+                    if (percent >= 67) labelTop.classList.add('active-label');
+                    else if (percent >= 34) labelMid.classList.add('active-label');
+                    else labelBot.classList.add('active-label');
+                }
+
+                surveyState.topic_ratings[topicId] = percent;
+
                 const finishBtn = card.querySelector('.btn-finish-survey');
                 if (finishBtn) {
                     finishBtn.classList.remove('disabled');
                     finishBtn.style.pointerEvents = 'auto';
                 }
-            });
+            };
 
-            slider.addEventListener('change', async (e) => {
-                const topicId = e.target.getAttribute('data-topic-id');
-                const idx = parseInt(e.target.getAttribute('data-index'));
-                surveyState.topic_ratings[topicId] = parseInt(e.target.value, 10);
-
+            const commitRating = async () => {
+                if (card.classList.contains('inactive-card')) return;
+                if (surveyState.topic_ratings[topicId] === undefined) return;
+                
                 if (idx > surveyState.last_answered_topic_index) {
                     surveyState.last_answered_topic_index = idx;
                 }
 
                 await saveProgress();
                 localStorage.setItem('surveyState', JSON.stringify(surveyState));
-
                 updateNavButtons();
 
-                // Auto advance for both desktop and mobile
                 if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
                 autoAdvanceTimer = setTimeout(() => {
                     handleNextTopic();
                 }, config.rating.autoAdvanceDelayMs || 1000);
+            };
+
+            card.addEventListener('mousedown', (e) => {
+                if (card.classList.contains('inactive-card')) return;
+                if (e.target.closest('.btn-finish-survey')) return;
+                
+                isDragging = true;
+                updateRatingFromEvent(e);
+            });
+            
+            window.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                updateRatingFromEvent(e);
+            });
+
+            window.addEventListener('mouseup', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                commitRating();
+            });
+
+            card.addEventListener('touchstart', (e) => {
+                if (card.classList.contains('inactive-card')) return;
+                if (e.target.closest('.btn-finish-survey')) return;
+                
+                isDragging = true;
+                updateRatingFromEvent(e);
+            }, {passive: true});
+
+            card.addEventListener('touchmove', (e) => {
+                if (!isDragging) return;
+                updateRatingFromEvent(e);
+            }, {passive: true});
+
+            card.addEventListener('touchend', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                commitRating();
+            });
+            
+            card.addEventListener('touchcancel', (e) => {
+                if (!isDragging) return;
+                isDragging = false;
+                commitRating();
             });
         });
 
