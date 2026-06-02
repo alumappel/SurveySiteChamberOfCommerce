@@ -139,7 +139,9 @@ const AdminApp = (() => {
                         <td>
                             <button class="btn btn-sm btn-outline-primary me-1" onclick="AdminApp.editSurvey('${s.id}')" title="ערוך"><i class="bi bi-pencil"></i> ערוך</button>
                             <button class="btn btn-sm btn-outline-secondary me-1" onclick="AdminApp.copySurveyLink('${s.id}')" title="העתק קישור"><i class="bi bi-link-45deg"></i> קישור</button>
-                            <button class="btn btn-sm btn-outline-success" onclick="AdminApp.exportSurveyData('${s.id}')" title="הורד נתונים"><i class="bi bi-file-earmark-excel"></i> אקסל</button>
+                            <button class="btn btn-sm btn-outline-success me-1" onclick="AdminApp.exportSurveyData('${s.id}')" title="הורד נתונים"><i class="bi bi-file-earmark-excel"></i> אקסל</button>
+                            <button class="btn btn-sm btn-outline-info me-1" onclick="AdminApp.openDashboard('${s.id}')" title="דשבורד תוצאות"><i class="bi bi-graph-up"></i> תוצאות</button>
+                            <button class="btn btn-sm btn-outline-danger" onclick="AdminApp.deleteSurvey('${s.id}')" title="מחק שאלון"><i class="bi bi-trash"></i> מחק</button>
                         </td>
                     `;
                     tbody.appendChild(row);
@@ -220,6 +222,38 @@ const AdminApp = (() => {
             console.error(err);
             alert('שגיאה בייצוא הנתונים לשאלון זה');
         }
+    };
+
+    let surveyToDelete = null;
+
+    const deleteSurvey = (id) => {
+        surveyToDelete = id;
+        const modal = new bootstrap.Modal(document.getElementById('deleteSurveyModal'));
+        modal.show();
+        
+        document.getElementById('confirm-delete-btn').onclick = async () => {
+            modal.hide();
+            try {
+                const res = await fetch(`${BASE_URL}/api/admin/surveys/${surveyToDelete}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('admin_token') }
+                });
+                if (res.ok) {
+                    await loadSurveysList();
+                    // if currently open in dashboard, clear dashboard
+                    const select = document.getElementById('results-survey-select');
+                    if (select && select.value === surveyToDelete) {
+                        document.getElementById('results-content').classList.add('d-none');
+                        document.getElementById('results-empty').classList.remove('d-none');
+                    }
+                } else {
+                    alert('שגיאה במחיקת השאלון');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('שגיאת תקשורת');
+            }
+        };
     };
 
     // VISUAL EDITOR LOGIC
@@ -417,14 +451,468 @@ const AdminApp = (() => {
         document.getElementById('section-visual').classList.add('d-none');
         document.getElementById('section-data').classList.add('d-none');
         document.getElementById('section-config').classList.add('d-none');
+        document.getElementById('section-results').classList.add('d-none');
         
         document.getElementById('tab-surveys').classList.remove('active');
         document.getElementById('tab-visual').classList.remove('active');
         document.getElementById('tab-data').classList.remove('active');
         document.getElementById('tab-config').classList.remove('active');
+        document.getElementById('tab-results').classList.remove('active');
 
         document.getElementById(`section-${tabId}`).classList.remove('d-none');
         document.getElementById(`tab-${tabId}`).classList.add('active');
+    };
+
+    // --- RESULTS DASHBOARD LOGIC ---
+    let dashboardCharts = {
+        sectors: null,
+        sizes: null,
+        comparison: null
+    };
+    let currentDashboardData = { responses: [], config: null };
+
+    const openDashboard = async (surveyId = null) => {
+        switchTab('results');
+        
+        // Populate survey select
+        try {
+            const res = await fetch(`${BASE_URL}/api/admin/surveys`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('admin_token') }
+            });
+            if (res.ok) {
+                const surveys = await res.json();
+                const select = document.getElementById('results-survey-select');
+                select.innerHTML = '<option value="">בחר שאלון...</option>';
+                surveys.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.id;
+                    opt.textContent = s.name;
+                    select.appendChild(opt);
+                });
+                
+                if (surveyId) {
+                    select.value = surveyId;
+                    loadSurveyResults(surveyId);
+                } else if (surveys.length > 0) {
+                    select.value = surveys[0].id;
+                    loadSurveyResults(surveys[0].id);
+                }
+            }
+        } catch (e) {
+            console.error('Failed to load surveys for dashboard', e);
+        }
+    };
+
+    const loadSurveyResults = async (surveyId) => {
+        if (!surveyId) {
+            document.getElementById('results-content').classList.add('d-none');
+            document.getElementById('results-empty').classList.remove('d-none');
+            return;
+        }
+
+        try {
+            // Fetch responses
+            const resResponses = await fetch(`${BASE_URL}/api/admin/responses/${surveyId}`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('admin_token') }
+            });
+            const responses = await resResponses.json();
+
+            // Fetch survey config for topic names
+            const resConfig = await fetch(`${BASE_URL}/api/admin/surveys/${surveyId}`, {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('admin_token') }
+            });
+            const config = await resConfig.json();
+
+            currentDashboardData.responses = responses;
+            currentDashboardData.config = config;
+
+            if (responses.length === 0) {
+                document.getElementById('results-content').classList.add('d-none');
+                document.getElementById('results-empty').classList.remove('d-none');
+                return;
+            }
+
+            document.getElementById('results-empty').classList.add('d-none');
+            document.getElementById('results-content').classList.remove('d-none');
+
+            renderDashboard();
+
+        } catch (err) {
+            console.error('Failed to load dashboard data', err);
+            alert('שגיאה בטעינת נתוני הדשבורד');
+        }
+    };
+
+    const calculateStats = (values) => {
+        if (!values || values.length === 0) return { n: 0, mean: 0, median: 0, std: 0 };
+        const n = values.length;
+        const mean = values.reduce((a, b) => a + b, 0) / n;
+        
+        const sorted = [...values].sort((a, b) => a - b);
+        const mid = Math.floor(n / 2);
+        const median = n % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        
+        const variance = values.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n;
+        const std = Math.sqrt(variance);
+        
+        return { n, mean: Math.round(mean), median: Math.round(median), std: std.toFixed(1) };
+    };
+
+    const renderDashboard = () => {
+        const { responses, config } = currentDashboardData;
+        const activeTopics = config.topics || [];
+
+        // 1. Total Respondents
+        document.getElementById('res-total-n').textContent = responses.length;
+
+        // 2. Business Names
+        const namesContainer = document.getElementById('res-business-names');
+        namesContainer.innerHTML = '';
+        const names = responses.map(r => r.business_name).filter(n => n);
+        names.forEach(n => {
+            const div = document.createElement('div');
+            div.className = 'border-bottom py-2 px-1';
+            div.textContent = n;
+            namesContainer.appendChild(div);
+        });
+
+        // 3. Sectors Pie
+        const sectorsCount = {};
+        responses.forEach(r => {
+            const sec = r.business_sector || 'לא ידוע';
+            sectorsCount[sec] = (sectorsCount[sec] || 0) + 1;
+        });
+        renderPieChart('chart-sectors', dashboardCharts.sectors, sectorsCount, 'sectors');
+
+        // 4. Sizes Pie
+        const sizesCount = {};
+        responses.forEach(r => {
+            const size = r.employee_count || 'לא ידוע';
+            sizesCount[size] = (sizesCount[size] || 0) + 1;
+        });
+        
+        const parseSize = (s) => parseInt(s.split('-')[0]) || 0;
+        const sortedSizesCount = {};
+        Object.keys(sizesCount).sort((a,b) => {
+            if (a === 'לא ידוע') return 1;
+            if (b === 'לא ידוע') return -1;
+            return parseSize(a) - parseSize(b);
+        }).forEach(k => sortedSizesCount[k] = sizesCount[k]);
+
+        renderPieChart('chart-sizes', dashboardCharts.sizes, sortedSizesCount, 'sizes');
+
+        // Prepare Ratings Data
+        const topicRatings = {};
+        activeTopics.forEach(t => topicRatings[t.id] = { title: t.title, values: [] });
+        
+        responses.forEach(r => {
+            let ratings = {};
+            try { ratings = JSON.parse(r.topic_ratings_json || '{}'); } catch(e){}
+            Object.keys(ratings).forEach(topicId => {
+                if (topicRatings[topicId]) {
+                    topicRatings[topicId].values.push(ratings[topicId]);
+                }
+            });
+        });
+
+        // 5. Services Table
+        const tbody = document.getElementById('res-services-table');
+        tbody.innerHTML = '';
+        activeTopics.forEach(t => {
+            const stats = calculateStats(topicRatings[t.id].values);
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="text-start fw-bold">${t.title}</td>
+                <td>${stats.n}</td>
+                <td>${stats.mean}%</td>
+                <td>${stats.median}</td>
+                <td>${stats.std}</td>
+            `;
+            tbody.appendChild(tr);
+        });
+
+        // 7. Final Comments
+        const commentsContainer = document.getElementById('res-final-comments');
+        commentsContainer.innerHTML = '';
+        const comments = responses.map(r => r.final_comment).filter(c => c && c.trim() !== '');
+        if (comments.length === 0) {
+            commentsContainer.innerHTML = '<div class="text-muted text-center py-3">אין הערות פתוחות</div>';
+        } else {
+            comments.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'border-bottom py-2 px-1';
+                div.textContent = c;
+                commentsContainer.appendChild(div);
+            });
+        }
+
+        // Setup Filters for Comparison Chart
+        setupFilters(sectorsCount, sizesCount, activeTopics);
+        updateComparisonChart();
+    };
+
+    const pieLabelsPlugin = {
+        id: 'pieLabels',
+        afterDraw(chart, args, options) {
+            const { ctx, data } = chart;
+            ctx.save();
+            ctx.font = 'bold 13px sans-serif';
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const total = data.datasets[0].data.reduce((a, b) => a + b, 0);
+
+            chart.getDatasetMeta(0).data.forEach((datapoint, index) => {
+                const val = data.datasets[0].data[index];
+                if (val === 0) return;
+                const pct = Math.round((val / total) * 100) + '%';
+                const center = datapoint.tooltipPosition();
+                ctx.fillText(pct, center.x, center.y);
+            });
+            ctx.restore();
+        }
+    };
+
+    const barLabelsAndErrorsPlugin = {
+        id: 'barLabelsAndErrors',
+        afterDraw(chart, args, options) {
+            const { ctx, data } = chart;
+            ctx.save();
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            
+            chart.data.datasets.forEach((dataset, datasetIndex) => {
+                const stdDevs = dataset.stdDevs;
+                chart.getDatasetMeta(datasetIndex).data.forEach((datapoint, index) => {
+                    const val = dataset.data[index];
+                    const std = stdDevs ? stdDevs[index] : 0;
+                    const x = datapoint.x;
+                    const y = datapoint.y;
+                    
+                    // Draw text
+                    ctx.fillStyle = '#333';
+                    ctx.font = 'bold 12px sans-serif';
+                    ctx.fillText(val + '%', x, y - 5);
+                    
+                    // Draw error bar
+                    if (std > 0) {
+                        const yScale = chart.scales.y;
+                        const upperY = yScale.getPixelForValue(val + parseFloat(std));
+                        const lowerY = yScale.getPixelForValue(Math.max(0, val - parseFloat(std)));
+                        
+                        ctx.beginPath();
+                        ctx.strokeStyle = '#e74a3b';
+                        ctx.lineWidth = 1.5;
+                        ctx.moveTo(x, lowerY);
+                        ctx.lineTo(x, upperY);
+                        ctx.moveTo(x - 3, upperY);
+                        ctx.lineTo(x + 3, upperY);
+                        ctx.moveTo(x - 3, lowerY);
+                        ctx.lineTo(x + 3, lowerY);
+                        ctx.stroke();
+                    }
+                });
+            });
+            ctx.restore();
+        }
+    };
+
+    const renderPieChart = (canvasId, chartRef, dataObj, refKey) => {
+        const ctx = document.getElementById(canvasId).getContext('2d');
+        const labels = Object.keys(dataObj);
+        const data = Object.values(dataObj);
+        
+        const total = data.reduce((a,b)=>a+b,0);
+
+        if (dashboardCharts[refKey]) dashboardCharts[refKey].destroy();
+
+        dashboardCharts[refKey] = new Chart(ctx, {
+            type: 'pie',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: [
+                        '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b',
+                        '#858796', '#5a5c69', '#2c9faf', '#e46ab3', '#fd7e14'
+                    ]
+                }]
+            },
+            plugins: [pieLabelsPlugin],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right' },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                let val = context.parsed;
+                                let pct = Math.round((val / total) * 100);
+                                return `${context.label}: ${val} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    };
+
+    const setupFilters = (sectorsCount, sizesCount, activeTopics) => {
+        const sectorList = document.getElementById('filter-sector-list');
+        sectorList.innerHTML = '';
+        Object.keys(sectorsCount).forEach(sec => {
+            sectorList.innerHTML += `
+                <li><label class="dropdown-item">
+                    <input type="checkbox" class="form-check-input filter-sector-chk me-2" value="${sec}"> ${sec}
+                </label></li>
+            `;
+        });
+
+        const sizeList = document.getElementById('filter-size-list');
+        sizeList.innerHTML = '';
+        Object.keys(sizesCount).forEach(size => {
+            sizeList.innerHTML += `
+                <li><label class="dropdown-item">
+                    <input type="checkbox" class="form-check-input filter-size-chk me-2" value="${size}"> ${size}
+                </label></li>
+            `;
+        });
+
+        const servicesList = document.getElementById('filter-services-list');
+        servicesList.innerHTML = '';
+        activeTopics.forEach(t => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <label class="dropdown-item">
+                    <input type="checkbox" class="form-check-input filter-service-chk me-2" value="${t.id}" checked>
+                    ${t.title}
+                </label>
+            `;
+            servicesList.appendChild(li);
+        });
+
+        // Add event listeners to checkboxes
+        document.querySelectorAll('.filter-sector-chk, .filter-size-chk, .filter-service-chk').forEach(chk => {
+            chk.addEventListener('change', updateComparisonChart);
+        });
+    };
+
+    const updateComparisonChart = () => {
+        const { responses, config } = currentDashboardData;
+        if (!responses || responses.length === 0) return;
+
+        const selSectors = Array.from(document.querySelectorAll('.filter-sector-chk:checked')).map(chk => chk.value);
+        const selSizes = Array.from(document.querySelectorAll('.filter-size-chk:checked')).map(chk => chk.value);
+        const selServices = Array.from(document.querySelectorAll('.filter-service-chk:checked')).map(chk => chk.value);
+
+        const activeTopics = (config.topics || []).filter(t => selServices.includes(t.id));
+        const labels = activeTopics.map(t => t.title);
+
+        const datasets = [];
+        const defaultColors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#2c9faf', '#e46ab3', '#fd7e14'];
+
+        if (selSectors.length === 0 && selSizes.length === 0) {
+            // Default 1 series, all filtered responses
+            const means = [];
+            const stdDevs = [];
+            activeTopics.forEach(t => {
+                let values = [];
+                responses.forEach(r => {
+                    let ratings = {};
+                    try { ratings = JSON.parse(r.topic_ratings_json || '{}'); } catch(e){}
+                    if (ratings[t.id] !== undefined) values.push(ratings[t.id]);
+                });
+                const stats = calculateStats(values);
+                means.push(stats.mean);
+                stdDevs.push(stats.std);
+            });
+            datasets.push({
+                label: 'ממוצע כללי',
+                data: means,
+                stdDevs: stdDevs,
+                backgroundColor: defaultColors.slice(0, means.length), // unique color per bar
+                borderRadius: 4
+            });
+        } else {
+            // Group by selected filters
+            const sectorsToIterate = selSectors.length > 0 ? selSectors : ['all'];
+            const sizesToIterate = selSizes.length > 0 ? selSizes : ['all'];
+
+            let colorIdx = 0;
+
+            sectorsToIterate.forEach(sec => {
+                sizesToIterate.forEach(size => {
+                    const filteredResponses = responses.filter(r => {
+                        if (sec !== 'all' && (r.business_sector || 'לא ידוע') !== sec) return false;
+                        if (size !== 'all' && (r.employee_count || 'לא ידוע') !== size) return false;
+                        return true;
+                    });
+
+                    const means = [];
+                    const stdDevs = [];
+
+                    activeTopics.forEach(t => {
+                        let values = [];
+                        filteredResponses.forEach(r => {
+                            let ratings = {};
+                            try { ratings = JSON.parse(r.topic_ratings_json || '{}'); } catch(e){}
+                            if (ratings[t.id] !== undefined) values.push(ratings[t.id]);
+                        });
+                        const stats = calculateStats(values);
+                        means.push(stats.mean);
+                        stdDevs.push(stats.std);
+                    });
+
+                    let seriesLabel = [];
+                    if (sec !== 'all') seriesLabel.push(sec);
+                    if (size !== 'all') seriesLabel.push(size);
+                    
+                    datasets.push({
+                        label: seriesLabel.join(' - '),
+                        data: means,
+                        stdDevs: stdDevs,
+                        backgroundColor: defaultColors[colorIdx % defaultColors.length], // uniform color for the series
+                        borderRadius: 4
+                    });
+                    colorIdx++;
+                });
+            });
+        }
+
+        const ctx = document.getElementById('chart-comparison').getContext('2d');
+        if (dashboardCharts.comparison) dashboardCharts.comparison.destroy();
+
+        dashboardCharts.comparison = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: labels,
+                datasets: datasets
+            },
+            plugins: [barLabelsAndErrorsPlugin],
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                },
+                plugins: {
+                    legend: { display: datasets.length > 1 }, // Show legend only if multiple series
+                    tooltip: {
+                        callbacks: {
+                            afterLabel: function(context) {
+                                const std = context.dataset.stdDevs[context.dataIndex];
+                                return `סטיית תקן: ±${std}`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
     };
 
     const logout = () => {
@@ -438,12 +926,16 @@ const AdminApp = (() => {
         saveConfig,
         exportData,
         switchTab,
+        openDashboard,
+        loadSurveyResults,
+        updateComparisonChart,
         logout,
         updateVideoUrl,
         loadSurveysList,
         createNewSurvey,
         copySurveyLink,
         exportSurveyData,
+        deleteSurvey,
         editSurvey,
         previewVisualMedia,
         cancelVisualEdit,

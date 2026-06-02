@@ -205,6 +205,29 @@ app.put('/api/admin/surveys/:id', authenticateAdmin, (req, res) => {
   });
 });
 
+// Delete survey
+app.delete('/api/admin/surveys/:id', authenticateAdmin, (req, res) => {
+  const surveyId = req.params.id;
+  
+  // Also delete all responses related to this survey to keep DB clean
+  db.run("DELETE FROM responses WHERE survey_id = ?", [surveyId], function(err) {
+    if (err) console.error("Error deleting responses", err);
+    
+    db.run("DELETE FROM surveys WHERE id = ?", [surveyId], function(err) {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ message: 'Survey deleted' });
+    });
+  });
+});
+
+// Get responses for a survey (Dashboard Data)
+app.get('/api/admin/responses/:survey_id', authenticateAdmin, (req, res) => {
+  db.all("SELECT * FROM responses WHERE survey_id = ?", [req.params.survey_id], (err, rows) => {
+    if (err) return res.status(500).json({ error: err.message });
+    res.json(rows);
+  });
+});
+
 // Upload Image
 app.post('/api/admin/upload', authenticateAdmin, upload.single('image'), (req, res) => {
   if (req.file) {
