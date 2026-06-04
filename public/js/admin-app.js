@@ -1,5 +1,5 @@
 const AdminApp = (() => {
-    const BASE_URL = 'http://localhost:3000'; // ערוך לכתובת השרת האמיתי בסביבת פרודקשן
+    const BASE_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:3000' : '';
 
     const checkAuth = () => {
         if (!localStorage.getItem('admin_token')) {

@@ -1,6 +1,5 @@
 const UserApp = (() => {
-    // const BASE_URL = 'http://localhost:3000'; // כתובת לוקאלהוסט
-    const BASE_URL = 'https://remote-defiance-unpainted.ngrok-free.dev'; // כתובת ngrok
+    const BASE_URL = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') ? 'http://localhost:3000' : '';
 
     const FETCH_OPTIONS = {
         credentials: 'include',
@@ -113,7 +112,7 @@ const UserApp = (() => {
 
     const getMediaElement = (url) => {
         if (!url) return '';
-        
+
         // YouTube URL parsing
         const ytReg = /(?:youtube\.com\/(?:[^\/]+\/.+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([^"&?\/\s]{11})/i;
         const ytMatch = url.match(ytReg);
@@ -121,7 +120,7 @@ const UserApp = (() => {
             const videoId = ytMatch[1];
             return `<iframe src="https://www.youtube.com/embed/${videoId}" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen style="border-radius: 20px; width: 100%; height: 100%;"></iframe>`;
         }
-        
+
         // Vimeo URL parsing
         const vimeoReg = /(?:vimeo\.com\/(?:channels\/[^\/]+\/|groups\/[^\/]+\/album\/\d+\/video\/|video\/|)|player\.vimeo\.com\/video\/)(\d+)/i;
         const vimeoMatch = url.match(vimeoReg);
@@ -129,12 +128,12 @@ const UserApp = (() => {
             const videoId = vimeoMatch[1];
             return `<iframe src="https://player.vimeo.com/video/${videoId}" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen style="border-radius: 20px; width: 100%; height: 100%;"></iframe>`;
         }
-        
+
         // Direct video format
         if (/\.(mp4|webm|ogg|mov)$/i.test(url)) {
             return `<video src="${url}" controls style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;"></video>`;
         }
-        
+
         // Image format
         return `<img src="${url}" alt="Intro Visual" style="width: 100%; height: 100%; object-fit: cover; border-radius: 20px;" onerror="this.style.display='none';">`;
     };
@@ -253,15 +252,15 @@ const UserApp = (() => {
 
                 // Save to local storage to pass to survey page
                 localStorage.setItem('surveyState', JSON.stringify(surveyState));
-                
+
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
-                
+
                 const instructionModalEl = document.getElementById('instructionModal');
                 if (instructionModalEl) {
                     const instructionModal = new bootstrap.Modal(instructionModalEl);
                     instructionModal.show();
-                    
+
                     document.getElementById('btn-understood-go').addEventListener('click', () => {
                         window.location.href = 'survey.html';
                     }, { once: true });
@@ -429,7 +428,7 @@ const UserApp = (() => {
 
         const isLastCard = index === activeTopics.length - 1;
         const isEditing = surveyState.status === 'edited_after_completion';
-        
+
         let buttonHtml = '';
         if (isLastCard && isEditing) {
             buttonHtml = `
@@ -516,7 +515,7 @@ const UserApp = (() => {
                 cardInner.classList.add('active-card');
                 cardInner.classList.remove('inactive-card');
                 cardInner.querySelectorAll('button').forEach(el => el.removeAttribute('disabled'));
-                
+
                 if (cardInner._hintTimer) clearTimeout(cardInner._hintTimer);
                 if (surveyState.topic_ratings[topicId] === undefined) {
                     cardInner._hintTimer = setTimeout(() => {
@@ -527,7 +526,7 @@ const UserApp = (() => {
             } else {
                 cardInner.classList.remove('active-card');
                 cardInner.classList.add('inactive-card');
-                
+
                 const hint = document.getElementById(`hint-${topicId}`);
                 if (hint) hint.classList.remove('show');
                 if (cardInner._hintTimer) clearTimeout(cardInner._hintTimer);
@@ -621,7 +620,7 @@ const UserApp = (() => {
 
             const updateRatingFromEvent = (e) => {
                 if (card.classList.contains('inactive-card')) return;
-                
+
                 const hint = document.getElementById(`hint-${topicId}`);
                 if (hint) hint.classList.remove('show');
                 if (card._hintTimer) clearTimeout(card._hintTimer);
@@ -631,13 +630,13 @@ const UserApp = (() => {
                 if (e.touches && e.touches.length > 0) {
                     clientY = e.touches[0].clientY;
                 }
-                
+
                 let yPos = clientY - rect.top;
                 yPos = Math.max(0, Math.min(rect.height, yPos));
-                
+
                 let percent = 100 - (yPos / rect.height * 100);
                 percent = Math.round(percent);
-                
+
                 const fillSidebar = document.getElementById(`fill-sidebar-${topicId}`);
                 if (fillSidebar) {
                     fillSidebar.style.height = `${percent}%`;
@@ -653,12 +652,12 @@ const UserApp = (() => {
                 const labelTop = document.getElementById(`label-top-${topicId}`);
                 const labelMid = document.getElementById(`label-mid-${topicId}`);
                 const labelBot = document.getElementById(`label-bot-${topicId}`);
-                
+
                 if (labelTop && labelMid && labelBot) {
                     labelTop.classList.remove('active-label', 'covered-label');
                     labelMid.classList.remove('active-label', 'covered-label');
                     labelBot.classList.remove('active-label', 'covered-label');
-                    
+
                     if (percent >= 67) {
                         labelTop.classList.add('active-label');
                         labelMid.classList.add('covered-label');
@@ -685,7 +684,7 @@ const UserApp = (() => {
             const commitRating = async () => {
                 if (card.classList.contains('inactive-card')) return;
                 if (surveyState.topic_ratings[topicId] === undefined) return;
-                
+
                 if (idx > surveyState.last_answered_topic_index) {
                     surveyState.last_answered_topic_index = idx;
                 }
@@ -703,11 +702,11 @@ const UserApp = (() => {
             card.addEventListener('mousedown', (e) => {
                 if (card.classList.contains('inactive-card')) return;
                 if (e.target.closest('.btn-finish-survey')) return;
-                
+
                 isDragging = true;
                 updateRatingFromEvent(e);
             });
-            
+
             window.addEventListener('mousemove', (e) => {
                 if (!isDragging) return;
                 updateRatingFromEvent(e);
@@ -722,22 +721,22 @@ const UserApp = (() => {
             card.addEventListener('touchstart', (e) => {
                 if (card.classList.contains('inactive-card')) return;
                 if (e.target.closest('.btn-finish-survey')) return;
-                
+
                 isDragging = true;
                 updateRatingFromEvent(e);
-            }, {passive: true});
+            }, { passive: true });
 
             card.addEventListener('touchmove', (e) => {
                 if (!isDragging) return;
                 updateRatingFromEvent(e);
-            }, {passive: true});
+            }, { passive: true });
 
             card.addEventListener('touchend', (e) => {
                 if (!isDragging) return;
                 isDragging = false;
                 commitRating();
             });
-            
+
             card.addEventListener('touchcancel', (e) => {
                 if (!isDragging) return;
                 isDragging = false;
