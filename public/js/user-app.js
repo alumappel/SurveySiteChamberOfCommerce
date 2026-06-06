@@ -533,13 +533,13 @@ const UserApp = (() => {
                 <div class="card shadow mx-auto p-0 rounded-4 topic-card-bg inactive-card position-relative d-flex flex-row" id="card-${topic.id}" data-topic-id="${topic.id}" data-index="${index}">
                     
                     <!-- Sidebar Rating (Right) -->
-                    <div class="sidebar-rating position-relative d-flex flex-shrink-0" style="width: 100px; border-left: 1px solid #dee2e6; z-index: 2; overflow: hidden;">
+                    <div class="sidebar-rating position-relative d-flex flex-shrink-0">
                         <div class="fill-level-indicator sidebar-fill" id="fill-sidebar-${topic.id}" style="height: ${hasValue ? val : 0}%; background-color: ${hasValue ? getSolidHslColor(val) : 'transparent'};"></div>
                         
                         <div class="rating-labels-right position-absolute h-100 d-flex flex-column justify-content-between py-4" style="right: 8px; top: 0; pointer-events: none; width: 85px;">
                             <span class="fw-bold rating-label-small ${hasValue && val >= 67 ? 'active-label' : ''}" id="label-top-${topic.id}">מאוד רלוונטי!</span>
-                            <span class="fw-bold rating-label-small ${hasValue && val >= 34 && val < 67 ? 'active-label' : ''}" id="label-mid-${topic.id}">מעניין אותי</span>
-                            <span class="fw-bold rating-label-small ${hasValue && val < 34 ? 'active-label' : ''}" id="label-bot-${topic.id}">לא רלוונטי עבורי</span>
+                            <span class="fw-bold rating-label-small ${hasValue && val >= 34 && val < 67 ? 'active-label' : (hasValue && val >= 67 ? 'covered-label' : '')}" id="label-mid-${topic.id}">מעניין אותי</span>
+                            <span class="fw-bold rating-label-small ${hasValue && val < 34 ? 'active-label' : (hasValue ? 'covered-label' : '')}" id="label-bot-${topic.id}">לא רלוונטי עבורי</span>
                         </div>
 
                         ${ticksHtml}
