@@ -28,6 +28,7 @@ const AdminApp = (() => {
                 if (res.ok) {
                     const data = await res.json();
                     localStorage.setItem('admin_token', data.token);
+                    localStorage.setItem('admin_permissions', data.permissions || 'full');
                     window.location.href = 'admin-dashboard.html';
                 } else {
                     document.getElementById('login-error').classList.remove('d-none');
@@ -109,9 +110,21 @@ const AdminApp = (() => {
     const initDashboard = async () => {
         if (!checkAuth()) return;
         
-        await loadSurveysList();
-        // Also keep JSON editor functionality for advanced tab
-        await loadConfigIntoEditor();
+        const permissions = localStorage.getItem('admin_permissions') || 'full';
+        if (permissions === 'partial') {
+            const sidebar = document.getElementById('admin-sidebar');
+            if (sidebar) sidebar.classList.add('d-none');
+            const mainContent = document.getElementById('admin-main-content');
+            if (mainContent) {
+                mainContent.classList.remove('col-md-9');
+                mainContent.classList.add('col-md-12');
+            }
+            await openDashboard();
+        } else {
+            await loadSurveysList();
+            // Also keep JSON editor functionality for advanced tab
+            await loadConfigIntoEditor();
+        }
     };
 
     const loadSurveysList = async () => {
@@ -447,6 +460,10 @@ const AdminApp = (() => {
     };
 
     const switchTab = (tabId) => {
+        const permissions = localStorage.getItem('admin_permissions') || 'full';
+        if (permissions === 'partial' && tabId !== 'results') {
+            return; // block navigation for partial permissions
+        }
         document.getElementById('section-surveys').classList.add('d-none');
         document.getElementById('section-visual').classList.add('d-none');
         document.getElementById('section-data').classList.add('d-none');
@@ -932,6 +949,7 @@ const AdminApp = (() => {
 
     const logout = () => {
         localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_permissions');
         window.location.href = 'admin.html';
     };
 

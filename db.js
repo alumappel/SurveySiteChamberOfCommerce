@@ -61,6 +61,7 @@ async function initDb() {
       id INT AUTO_INCREMENT PRIMARY KEY,
       username VARCHAR(255) UNIQUE,
       password_hash VARCHAR(255),
+      permissions VARCHAR(50) DEFAULT 'full',
       last_login_at DATETIME,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )`);
@@ -68,7 +69,7 @@ async function initDb() {
     // Insert default admin user if not exists (username: admin, password: password123)
     const [rows] = await pool.execute("SELECT * FROM admin_users WHERE username = ?", ['admin']);
     if (rows.length === 0) {
-      await pool.execute("INSERT INTO admin_users (username, password_hash) VALUES (?, ?)", ['admin', '$2a$10$wYu2zh047bQZ2dmhCJ9wQuWLUUwagopdEk1Cby1JtkhAFX61SkEku']);
+      await pool.execute("INSERT INTO admin_users (username, password_hash, permissions) VALUES (?, ?, ?)", ['admin', '$2a$10$wYu2zh047bQZ2dmhCJ9wQuWLUUwagopdEk1Cby1JtkhAFX61SkEku', 'full']);
     }
     
     console.log("Database initialized successfully.");

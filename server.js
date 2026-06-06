@@ -71,10 +71,22 @@ const upload = multer({ storage });
 // Admin Authentication Middleware
 const authenticateAdmin = (req, res, next) => {
   const authHeader = req.headers.authorization;
-  if (authHeader === 'Bearer authenticated') {
+  if (authHeader === 'Bearer authenticated_full' || authHeader === 'Bearer authenticated') {
+    req.adminRole = 'full';
+    next();
+  } else if (authHeader === 'Bearer authenticated_partial') {
+    req.adminRole = 'partial';
     next();
   } else {
     res.status(401).json({ error: 'Unauthorized' });
+  }
+};
+
+const requireFullAdmin = (req, res, next) => {
+  if (req.adminRole === 'full') {
+    next();
+  } else {
+    res.status(403).json({ error: 'Forbidden: Full admin privileges required' });
   }
 };
 
@@ -162,7 +174,13 @@ app.post('/api/admin/login', async (req, res) => {
     const [rows] = await db.execute("SELECT * FROM admin_users WHERE username = ?", [username || '']);
     const user = rows[0];
     if (user && bcrypt.compareSync(password, user.password_hash)) {
-      res.json({ message: 'Logged in', token: 'authenticated' });
+      const userPermissions = user.permissions || 'full';
+      const token = userPermissions === 'partial' ? 'authenticated_partial' : 'authenticated_full';
+      res.json({ 
+        message: 'Logged in', 
+        token: token,
+        permissions: userPermissions
+      });
     } else {
       res.status(401).json({ error: 'Invalid credentials' });
     }
@@ -196,7 +214,7 @@ app.get('/api/admin/surveys/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Create new survey
-app.post('/api/admin/surveys', authenticateAdmin, async (req, res) => {
+app.post('/api/admin/surveys', authenticateAdmin, requireFullAdmin, async (req, res) => {
   const { name, config } = req.body;
   const id = 'survey_' + Date.now() + Math.random().toString(36).substr(2, 9);
   const configJson = JSON.stringify(config);
@@ -210,7 +228,7 @@ app.post('/api/admin/surveys', authenticateAdmin, async (req, res) => {
 });
 
 // Update survey config
-app.put('/api/admin/surveys/:id', authenticateAdmin, async (req, res) => {
+app.put('/api/admin/surveys/:id', authenticateAdmin, requireFullAdmin, async (req, res) => {
   const { name, config, is_active } = req.body;
   const configJson = JSON.stringify(config);
   
@@ -224,7 +242,7 @@ app.put('/api/admin/surveys/:id', authenticateAdmin, async (req, res) => {
 });
 
 // Delete survey
-app.delete('/api/admin/surveys/:id', authenticateAdmin, async (req, res) => {
+app.delete('/api/admin/surveys/:id', authenticateAdmin, requireFullAdmin, async (req, res) => {
   const surveyId = req.params.id;
   
   try {
@@ -248,7 +266,7 @@ app.get('/api/admin/responses/:survey_id', authenticateAdmin, async (req, res) =
 });
 
 // Upload Image
-app.post('/api/admin/upload', authenticateAdmin, upload.single('image'), (req, res) => {
+app.post('/api/admin/upload', authenticateAdmin, requireFullAdmin, upload.single('image'), (req, res) => {
   if (req.file) {
     res.json({ url: '/uploads/' + req.file.filename });
   } else {
