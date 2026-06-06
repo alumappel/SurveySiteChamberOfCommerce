@@ -42,6 +42,12 @@
           "51-200",
           "מעל 200"
         ]
+      },
+      {
+        "name": "is_chamber_member",
+        "label": "אני חבר/ת באיגוד לשכות המסחר",
+        "type": "checkbox",
+        "required": false
       }
     ]
   },

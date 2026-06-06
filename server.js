@@ -119,7 +119,7 @@ app.get('/api/survey/config', async (req, res) => {
 
 // Start/Resume Survey
 app.post('/api/survey/start', async (req, res) => {
-  const { respondent_id, survey_id, business_name, business_sector, employee_count } = req.body;
+  const { respondent_id, survey_id, business_name, business_sector, employee_count, is_chamber_member } = req.body;
   const response_id = 'resp_' + Date.now() + Math.random().toString(36).substr(2, 9);
 
   if (respondent_id) {
@@ -132,9 +132,9 @@ app.post('/api/survey/start', async (req, res) => {
     if (rows.length > 0) {
       res.json({ message: 'Resumed', response_id: rows[0].response_id, data: rows[0] });
     } else {
-      await db.execute(`INSERT INTO responses (response_id, respondent_id, survey_id, business_name, business_sector, employee_count, status, started_at) 
-              VALUES (?, ?, ?, ?, ?, ?, 'in_progress', CURRENT_TIMESTAMP)`,
-        [response_id, respondent_id || null, survey_id || null, business_name || null, business_sector || null, employee_count || null]);
+      await db.execute(`INSERT INTO responses (response_id, respondent_id, survey_id, business_name, business_sector, employee_count, is_chamber_member, status, started_at) 
+              VALUES (?, ?, ?, ?, ?, ?, ?, 'in_progress', CURRENT_TIMESTAMP)`,
+        [response_id, respondent_id || null, survey_id || null, business_name || null, business_sector || null, employee_count || null, is_chamber_member ? 1 : 0]);
       res.json({ message: 'Started', response_id });
     }
   } catch (err) {
@@ -353,7 +353,8 @@ app.get('/api/admin/export', authenticateAdmin, async (req, res) => {
       { header: 'Employees', key: 'employee_count', width: 15 },
       { header: 'Status', key: 'status', width: 15 },
       { header: 'Started', key: 'started_at', width: 20 },
-      { header: 'Completed', key: 'completed_at', width: 20 }
+      { header: 'Completed', key: 'completed_at', width: 20 },
+      { header: 'Chamber Member', key: 'is_chamber_member_text', width: 15 }
     ];
 
     orderedTopicIds.forEach(topicId => {
@@ -368,6 +369,7 @@ app.get('/api/admin/export', authenticateAdmin, async (req, res) => {
 
     rows.forEach(row => {
         const rowData = { ...row };
+        rowData.is_chamber_member_text = row.is_chamber_member ? 'כן' : 'לא';
         orderedTopicIds.forEach(topicId => {
             rowData[`topic_${topicId}`] = row.ratings[topicId] !== undefined ? row.ratings[topicId] : '';
         });

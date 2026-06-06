@@ -207,14 +207,13 @@ const UserApp = (() => {
             const div = document.createElement('div');
             div.className = 'mb-3 text-start';
 
-            const label = document.createElement('label');
-            label.className = 'form-label fw-bold';
-            label.textContent = field.label;
-            if (field.required) label.textContent += ' *';
-
-            div.appendChild(label);
-
             if (field.type === 'select') {
+                const label = document.createElement('label');
+                label.className = 'form-label fw-bold';
+                label.textContent = field.label;
+                if (field.required) label.textContent += ' *';
+                div.appendChild(label);
+
                 const select = document.createElement('select');
                 select.className = 'form-select';
                 select.name = field.name;
@@ -232,7 +231,31 @@ const UserApp = (() => {
                     select.appendChild(option);
                 });
                 div.appendChild(select);
+            } else if (field.type === 'checkbox') {
+                div.className = 'form-check text-start mt-3';
+
+                const input = document.createElement('input');
+                input.type = 'checkbox';
+                input.className = 'form-check-input';
+                input.name = field.name;
+                input.id = field.name;
+                input.required = field.required;
+
+                const label = document.createElement('label');
+                label.className = 'form-check-label fw-bold ms-2';
+                label.htmlFor = field.name;
+                label.textContent = field.label;
+                if (field.required) label.textContent += ' *';
+
+                div.appendChild(input);
+                div.appendChild(label);
             } else {
+                const label = document.createElement('label');
+                label.className = 'form-label fw-bold';
+                label.textContent = field.label;
+                if (field.required) label.textContent += ' *';
+                div.appendChild(label);
+
                 const input = document.createElement('input');
                 input.type = field.type;
                 input.className = 'form-control';
@@ -261,6 +284,16 @@ const UserApp = (() => {
         }
         surveyState.respondent_id = respondentId;
 
+        // Handle parametric URL default for checkbox
+        const urlParams = new URLSearchParams(window.location.search);
+        const memberParam = urlParams.get('member') || urlParams.get('is_member');
+        if (memberParam !== null) {
+            const checkbox = document.getElementById('is_chamber_member');
+            if (checkbox) {
+                checkbox.checked = (memberParam === 'true' || memberParam === '1');
+            }
+        }
+
         document.getElementById('opening-form').addEventListener('submit', async (e) => {
             e.preventDefault();
             const form = e.target;
@@ -274,6 +307,10 @@ const UserApp = (() => {
             const data = Object.fromEntries(formData.entries());
             data.respondent_id = surveyState.respondent_id;
             data.survey_id = surveyState.survey_id;
+            
+            // Map checkbox values explicitly
+            const checkbox = document.getElementById('is_chamber_member');
+            data.is_chamber_member = checkbox ? checkbox.checked : false;
 
             try {
                 const submitBtn = form.querySelector('button[type="submit"]');

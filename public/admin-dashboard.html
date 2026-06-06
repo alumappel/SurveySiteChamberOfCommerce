@@ -173,6 +173,14 @@
                                 </div>
                             </div>
 
+                            <!-- Chamber Membership Pie -->
+                            <div class="bento-box bg-white rounded-4 p-3 shadow-sm">
+                                <h5 class="mb-3 text-center">חברות בלשכת המסחר</h5>
+                                <div class="chart-container" style="position: relative; height:200px; width:100%">
+                                    <canvas id="chart-members"></canvas>
+                                </div>
+                            </div>
+
                             <!-- Services Table -->
                             <div class="bento-box bg-white rounded-4 p-3 shadow-sm bento-wide">
                                 <h5 class="mb-3 text-primary">סיכום שירותים</h5>
@@ -213,6 +221,13 @@
                                                 סנן גודל עסק
                                             </button>
                                             <ul class="dropdown-menu p-2" id="filter-size-list" style="max-height: 200px; overflow-y: auto;">
+                                            </ul>
+                                        </div>
+                                        <div class="dropdown">
+                                            <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown" data-bs-auto-close="outside">
+                                                סנן חברות בלשכה
+                                            </button>
+                                            <ul class="dropdown-menu p-2" id="filter-member-list" style="max-height: 200px; overflow-y: auto;">
                                             </ul>
                                         </div>
                                         <div class="dropdown">

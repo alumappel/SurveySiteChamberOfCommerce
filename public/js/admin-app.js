@@ -506,6 +506,7 @@ const AdminApp = (() => {
     let dashboardCharts = {
         sectors: null,
         sizes: null,
+        members: null,
         comparison: null
     };
     let currentDashboardData = { responses: [], config: null };
@@ -639,6 +640,18 @@ const AdminApp = (() => {
         }).forEach(k => sortedSizesCount[k] = sizesCount[k]);
 
         renderPieChart('chart-sizes', dashboardCharts.sizes, sortedSizesCount, 'sizes');
+
+        // 4.5 Chamber Membership Pie
+        const membersCount = { 'חבר לשכה': 0, 'לא חבר': 0 };
+        responses.forEach(r => {
+            const isMember = r.is_chamber_member;
+            if (isMember === 1 || isMember === true || String(isMember) === '1') {
+                membersCount['חבר לשכה']++;
+            } else {
+                membersCount['לא חבר']++;
+            }
+        });
+        renderPieChart('chart-members', dashboardCharts.members, membersCount, 'members');
 
         // Prepare Ratings Data
         const topicRatings = {};
@@ -819,6 +832,18 @@ const AdminApp = (() => {
             `;
         });
 
+        const memberList = document.getElementById('filter-member-list');
+        if (memberList) {
+            memberList.innerHTML = `
+                <li><label class="dropdown-item">
+                    <input type="checkbox" class="form-check-input filter-member-chk me-2" value="1"> חבר לשכה
+                </label></li>
+                <li><label class="dropdown-item">
+                    <input type="checkbox" class="form-check-input filter-member-chk me-2" value="0"> לא חבר
+                </label></li>
+            `;
+        }
+
         const servicesList = document.getElementById('filter-services-list');
         servicesList.innerHTML = '';
         activeTopics.forEach(t => {
@@ -833,13 +858,13 @@ const AdminApp = (() => {
         });
 
         // Add event listeners to checkboxes
-        document.querySelectorAll('.filter-sector-chk, .filter-size-chk, .filter-service-chk').forEach(chk => {
+        document.querySelectorAll('.filter-sector-chk, .filter-size-chk, .filter-member-chk, .filter-service-chk').forEach(chk => {
             chk.addEventListener('change', updateComparisonChart);
         });
     };
 
     const resetComparisonFilters = () => {
-        document.querySelectorAll('.filter-sector-chk, .filter-size-chk').forEach(chk => chk.checked = false);
+        document.querySelectorAll('.filter-sector-chk, .filter-size-chk, .filter-member-chk').forEach(chk => chk.checked = false);
         document.querySelectorAll('.filter-service-chk').forEach(chk => chk.checked = true);
         updateComparisonChart();
     };
@@ -859,6 +884,7 @@ const AdminApp = (() => {
 
         const selSectors = Array.from(document.querySelectorAll('.filter-sector-chk:checked')).map(chk => chk.value);
         const selSizes = Array.from(document.querySelectorAll('.filter-size-chk:checked')).map(chk => chk.value);
+        const selMembers = Array.from(document.querySelectorAll('.filter-member-chk:checked')).map(chk => chk.value);
         const selServices = Array.from(document.querySelectorAll('.filter-service-chk:checked')).map(chk => chk.value);
 
         const activeTopics = (config.topics || []).filter(t => selServices.includes(t.id));
@@ -867,7 +893,7 @@ const AdminApp = (() => {
         const datasets = [];
         const defaultColors = ['#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', '#858796', '#5a5c69', '#2c9faf', '#e46ab3', '#fd7e14'];
 
-        if (selSectors.length === 0 && selSizes.length === 0) {
+        if (selSectors.length === 0 && selSizes.length === 0 && selMembers.length === 0) {
             // Default 1 series, all filtered responses
             const means = [];
             const stdDevs = [];
@@ -893,44 +919,56 @@ const AdminApp = (() => {
             // Group by selected filters
             const sectorsToIterate = selSectors.length > 0 ? selSectors : ['all'];
             const sizesToIterate = selSizes.length > 0 ? selSizes : ['all'];
+            const membersToIterate = selMembers.length > 0 ? selMembers : ['all'];
 
             let colorIdx = 0;
 
             sectorsToIterate.forEach(sec => {
                 sizesToIterate.forEach(size => {
-                    const filteredResponses = responses.filter(r => {
-                        if (sec !== 'all' && (r.business_sector || 'לא ידוע') !== sec) return false;
-                        if (size !== 'all' && (r.employee_count || 'לא ידוע') !== size) return false;
-                        return true;
-                    });
-
-                    const means = [];
-                    const stdDevs = [];
-
-                    activeTopics.forEach(t => {
-                        let values = [];
-                        filteredResponses.forEach(r => {
-                            let ratings = {};
-                            try { ratings = JSON.parse(r.topic_ratings_json || '{}'); } catch(e){}
-                            if (ratings[t.id] !== undefined) values.push(ratings[t.id]);
+                    membersToIterate.forEach(member => {
+                        const filteredResponses = responses.filter(r => {
+                            if (sec !== 'all' && (r.business_sector || 'לא ידוע') !== sec) return false;
+                            if (size !== 'all' && (r.employee_count || 'לא ידוע') !== size) return false;
+                            
+                            if (member !== 'all') {
+                                const isMember = r.is_chamber_member;
+                                const isMemberNormalized = (isMember === 1 || isMember === true || String(isMember) === '1') ? '1' : '0';
+                                if (isMemberNormalized !== member) return false;
+                            }
+                            return true;
                         });
-                        const stats = calculateStats(values);
-                        means.push(stats.mean);
-                        stdDevs.push(stats.std);
-                    });
 
-                    let seriesLabel = [];
-                    if (sec !== 'all') seriesLabel.push(sec);
-                    if (size !== 'all') seriesLabel.push(size);
-                    
-                    datasets.push({
-                        label: seriesLabel.join(' - '),
-                        data: means,
-                        stdDevs: stdDevs,
-                        backgroundColor: defaultColors[colorIdx % defaultColors.length], // uniform color for the series
-                        borderRadius: 4
+                        const means = [];
+                        const stdDevs = [];
+
+                        activeTopics.forEach(t => {
+                            let values = [];
+                            filteredResponses.forEach(r => {
+                                let ratings = {};
+                                try { ratings = JSON.parse(r.topic_ratings_json || '{}'); } catch(e){}
+                                if (ratings[t.id] !== undefined) values.push(ratings[t.id]);
+                            });
+                            const stats = calculateStats(values);
+                            means.push(stats.mean);
+                            stdDevs.push(stats.std);
+                        });
+
+                        let seriesLabel = [];
+                        if (sec !== 'all') seriesLabel.push(sec);
+                        if (size !== 'all') seriesLabel.push(size);
+                        if (member !== 'all') {
+                            seriesLabel.push(member === '1' ? 'חבר לשכה' : 'לא חבר');
+                        }
+                        
+                        datasets.push({
+                            label: seriesLabel.join(' - '),
+                            data: means,
+                            stdDevs: stdDevs,
+                            backgroundColor: defaultColors[colorIdx % defaultColors.length], // uniform color for the series
+                            borderRadius: 4
+                        });
+                        colorIdx++;
                     });
-                    colorIdx++;
                 });
             });
         }

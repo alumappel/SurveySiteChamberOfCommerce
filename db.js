@@ -22,6 +22,7 @@ async function initDb() {
       business_name VARCHAR(255),
       business_sector VARCHAR(255),
       employee_count VARCHAR(255),
+      is_chamber_member TINYINT(1) DEFAULT 0,
       topic_ratings_json TEXT,
       topic_display_order_json TEXT,
       status VARCHAR(50),
