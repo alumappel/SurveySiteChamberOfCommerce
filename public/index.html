@@ -11,7 +11,7 @@
     <link rel="stylesheet" href="css/user-styles.css">
 </head>
 
-<body>
+<body class="bg-light d-flex flex-column min-vh-100 survey-page-body">
     <!-- Background Glow Blobs -->
     <div class="bg-glow-container">
         <div class="glow-blob glow-red-1"></div>
@@ -19,13 +19,14 @@
         <div class="glow-blob glow-red-2"></div>
         <div class="glow-blob glow-blue-2"></div>
     </div>
-    <div class="container min-vh-100 d-flex flex-column justify-content-between py-4">
-        <header class="w-100 text-center text-md-start mb-4">
+    <header class="w-100 text-center text-md-start bg-white shadow-sm mb-2" style="padding: 10px 0;">
+        <div class="container">
             <a href="https://www.chamber.org.il/" target="_blank" rel="noopener noreferrer">
-                <img src="assets/לוגו חדש_איגוד לשכת המסחר_עברית.svg" alt="לוגו לשכת המסחר"
-                    style="height: 60px; border: 0;">
+                <img src="assets/לוגו חדש_איגוד לשכת המסחר_עברית.svg" alt="לוגו לשכת המסחר" style="height: 50px; border: 0;">
             </a>
-        </header>
+        </div>
+    </header>
+    <div class="container py-4 flex-grow-1 d-flex flex-column justify-content-center">
         <div class="row align-items-center my-auto g-4">
             <!-- Right Column (Content) - Full width -->
             <div class="col-12 text-start d-flex flex-column justify-content-center" dir="rtl">
@@ -39,7 +40,7 @@
         <!-- New Row for the Questionnaire Form -->
         <div class="row justify-content-center mb-auto mt-4">
             <div class="col-12 d-flex justify-content-center">
-                <div class="card shadow-lg border-0 p-4 rounded-4 w-100" style="max-width: 600px;">
+                <div id="opening-card" class="card shadow-lg p-4 w-100" style="max-width: 600px;">
                     <form id="opening-form" class="needs-validation" novalidate>
                         <div id="form-fields">
                             <!-- Fields injected by JS -->

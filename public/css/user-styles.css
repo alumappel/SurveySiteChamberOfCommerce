@@ -365,9 +365,14 @@ body {
 }
 
 /* Make bold tags in survey intro extra prominent */
+#intro-body {
+  font-weight: 400;
+  color: #0f172a;
+}
+
 #intro-body strong,
 #intro-body b {
-  font-weight: 400;
+  font-weight: 500;
   color: #0f172a;
   /* Slate 900 for high contrast against muted gray */
 }
@@ -399,7 +404,7 @@ body {
   position: absolute;
   border-radius: 50%;
   filter: blur(120px);
-  opacity: 0.12;
+  opacity: 0.06;
   mix-blend-mode: multiply;
   will-change: transform;
 }
@@ -543,15 +548,19 @@ body {
     margin-left: calc(-50vw + 50%) !important;
     margin-right: calc(-50vw + 50%) !important;
     padding-top: 0.5rem !important;
-    padding-bottom: 3.5rem !important; /* Large padding so shadow doesn't clip */
+    padding-bottom: 3.5rem !important;
+    /* Large padding so shadow doesn't clip */
     margin-top: 0 !important;
-    margin-bottom: -2.5rem !important; /* Compensate for the extra padding */
-    overflow: hidden !important; /* Keep overflow hidden so neighbor cards do not show */
+    margin-bottom: -2.5rem !important;
+    /* Compensate for the extra padding */
+    overflow: hidden !important;
+    /* Keep overflow hidden so neighbor cards do not show */
   }
 
   .carousel-track {
     padding-top: 0.5rem !important;
-    padding-bottom: 1rem !important; /* Lighter track padding */
+    padding-bottom: 1rem !important;
+    /* Lighter track padding */
   }
 
   header {
@@ -565,10 +574,10 @@ body {
     margin-top: auto !important;
   }
 
-  /* Increase visibility of amorphous brand glow blobs on mobile */
+  /* Weaken brand glow blobs on mobile so they do not clash with text */
   .glow-blob {
     filter: blur(80px) !important;
-    opacity: 0.22 !important;
+    opacity: 0.10 !important;
   }
 
   .glow-red-1 {
@@ -715,9 +724,10 @@ body {
   opacity: 1 !important;
 }
 
-/* Premium Modal & Completion Card Styles - Light Ivory-Gold Card Theme */
+/* Premium Modal, Completion Card & Opening Card Styles - Light Ivory-Gold Card Theme */
 .modal-content,
-#completion-container {
+#completion-container,
+#opening-card {
   background: linear-gradient(135deg, #ffffff 0%, #fefdfa 50%, #faf6e8 100%) !important;
   border: 2.5px solid #ffffff !important;
   border-radius: 24px !important;
