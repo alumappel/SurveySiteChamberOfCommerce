@@ -57,7 +57,7 @@
     "max": 100,
     "topLabel": "100% רלוונטיות",
     "bottomLabel": "0% רלוונטיות",
-    "autoAdvanceDelayMs": 1000
+    "autoAdvanceDelayMs": 3000
   },
   "toasts": {
     "halfway": {

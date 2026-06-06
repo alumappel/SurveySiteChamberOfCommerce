@@ -532,7 +532,7 @@ const UserApp = (() => {
             <div class="topic-card-wrapper" id="wrapper-${topic.id}">
                 <div class="card shadow mx-auto p-0 rounded-4 topic-card-bg inactive-card position-relative d-flex flex-row" id="card-${topic.id}" data-topic-id="${topic.id}" data-index="${index}">
                     
-                    <!-- Sidebar Area (Right) -->
+                    <!-- Sidebar Rating (Right) -->
                     <div class="sidebar-rating position-relative d-flex flex-shrink-0" style="width: 100px; border-left: 1px solid #dee2e6; z-index: 2; overflow: hidden;">
                         <div class="fill-level-indicator sidebar-fill" id="fill-sidebar-${topic.id}" style="height: ${hasValue ? val : 0}%; background-color: ${hasValue ? getSolidHslColor(val) : 'transparent'};"></div>
                         
@@ -543,16 +543,20 @@ const UserApp = (() => {
                         </div>
 
                         ${ticksHtml}
+
+                        <div class="inactivity-hint" id="hint-${topic.id}">
+                            <i class="bi bi-chevron-up"></i>
+                            <div style="height: 2px;"></div>
+                            <i class="bi bi-chevron-down"></i>
+                        </div>
                     </div>
 
                     <!-- Main Content Area (Left) -->
                     <div class="main-card-area position-relative flex-grow-1 d-flex flex-column">
                         <div class="fill-level-indicator main-fill" id="fill-main-${topic.id}" style="height: ${hasValue ? val : 0}%; background-color: ${hasValue ? getPastelColor(val) : 'transparent'};"></div>
                         
-                        <div class="inactivity-hint" id="hint-${topic.id}">
-                            <i class="bi bi-chevron-up"></i>
-                            <div style="height: 4px;"></div>
-                            <i class="bi bi-chevron-down"></i>
+                        <div class="percentage-display position-absolute" id="percentage-${topic.id}" style="top: 20px; left: 20px; z-index: 10; font-weight: bold; font-size: 1.5rem; color: #000000; pointer-events: none;">
+                            ${hasValue ? val + '%' : ''}
                         </div>
 
                         <div class="content-overlay position-relative flex-grow-1 d-flex flex-column justify-content-center align-items-center px-4 text-center" style="pointer-events: none; z-index: 2;">
@@ -601,7 +605,7 @@ const UserApp = (() => {
                     cardInner._hintTimer = setTimeout(() => {
                         const hint = document.getElementById(`hint-${topicId}`);
                         if (hint) hint.classList.add('show');
-                    }, 3000);
+                    }, 7000);
                 }
             } else {
                 cardInner.classList.remove('active-card');
@@ -754,6 +758,11 @@ const UserApp = (() => {
 
                 surveyState.topic_ratings[topicId] = percent;
 
+                const pctDisplay = document.getElementById(`percentage-${topicId}`);
+                if (pctDisplay) {
+                    pctDisplay.textContent = `${percent}%`;
+                }
+
                 const finishBtn = card.querySelector('.btn-finish-survey');
                 if (finishBtn) {
                     finishBtn.classList.remove('disabled');
@@ -776,7 +785,7 @@ const UserApp = (() => {
                 if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
                 autoAdvanceTimer = setTimeout(() => {
                     handleNextTopic();
-                }, config.rating.autoAdvanceDelayMs || 1000);
+                }, config.rating.autoAdvanceDelayMs || 3000);
             };
 
             card.addEventListener('mousedown', (e) => {
