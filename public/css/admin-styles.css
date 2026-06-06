@@ -60,3 +60,9 @@ body {
   background-color: #cbd5e1;
   border-radius: 10px;
 }
+
+/* Quill Editor RTL styling */
+#ve-intro-body-editor .ql-editor {
+  direction: rtl;
+  text-align: right;
+}

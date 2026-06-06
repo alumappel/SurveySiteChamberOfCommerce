@@ -271,6 +271,7 @@ const AdminApp = (() => {
 
     // VISUAL EDITOR LOGIC
     let currentEditingConfig = null;
+    let quillEditor = null;
 
     const editSurvey = async (id) => {
         try {
@@ -292,7 +293,21 @@ const AdminApp = (() => {
         document.getElementById('ve-survey-id').value = id;
         document.getElementById('ve-survey-name').value = config.surveyName || '';
         document.getElementById('ve-intro-title').value = config.intro?.title || '';
-        document.getElementById('ve-intro-body').value = config.intro?.body || '';
+        
+        if (!quillEditor) {
+            quillEditor = new Quill('#ve-intro-body-editor', {
+                theme: 'snow',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline'],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        ['clean']
+                    ]
+                }
+            });
+        }
+        quillEditor.root.innerHTML = config.intro?.body || '';
+        
         document.getElementById('ve-video-url').value = config.intro?.introVideoUrl || '';
         previewVisualMedia();
 
@@ -368,6 +383,13 @@ const AdminApp = (() => {
 
     const saveVisualEdit = async () => {
         const form = document.getElementById('visual-editor-form');
+        
+        const introText = quillEditor ? quillEditor.getText().trim() : '';
+        if (!introText) {
+            alert('אנא הזן טקסט פתיחה.');
+            return;
+        }
+
         if (!form.checkValidity()) {
             form.classList.add('was-validated');
             alert('אנא מלא את כל השדות החובה בטופס (מודגשים באדום).');
@@ -381,7 +403,7 @@ const AdminApp = (() => {
         currentEditingConfig.surveyName = surveyName;
         if (!currentEditingConfig.intro) currentEditingConfig.intro = {};
         currentEditingConfig.intro.title = document.getElementById('ve-intro-title').value.trim();
-        currentEditingConfig.intro.body = document.getElementById('ve-intro-body').value.trim();
+        currentEditingConfig.intro.body = quillEditor ? quillEditor.root.innerHTML : '';
         currentEditingConfig.intro.introVideoUrl = document.getElementById('ve-video-url').value.trim();
 
         if (!currentEditingConfig.completion) currentEditingConfig.completion = {};

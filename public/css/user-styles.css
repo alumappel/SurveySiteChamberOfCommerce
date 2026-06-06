@@ -12,13 +12,20 @@
   :root {
     --card-width: 82vw;
   }
+
   .carousel-nav-btn {
     width: 34px !important;
     height: 34px !important;
     font-size: 1rem !important;
   }
-  .carousel-nav-btn.prev-btn { right: 2px !important; }
-  .carousel-nav-btn.next-btn { left: 2px !important; }
+
+  .carousel-nav-btn.prev-btn {
+    right: 2px !important;
+  }
+
+  .carousel-nav-btn.next-btn {
+    left: 2px !important;
+  }
 }
 
 .text-bg-primary {
@@ -33,27 +40,46 @@ body {
 }
 
 /* Override Bootstrap Primary Colors */
-.bg-primary { background-color: var(--primary-color) !important; }
-.text-primary { color: var(--primary-color) !important; }
-.btn-primary { 
-  background-color: var(--primary-color) !important; 
-  border-color: var(--primary-color) !important; 
+.bg-primary {
+  background-color: var(--primary-color) !important;
 }
-.btn-primary:hover, .btn-primary:focus {
-  background-color: #003366 !important; 
+
+.text-primary {
+  color: var(--primary-color) !important;
+}
+
+.btn-primary {
+  background-color: var(--primary-color) !important;
+  border-color: var(--primary-color) !important;
+}
+
+.btn-primary:hover,
+.btn-primary:focus {
+  background-color: #003366 !important;
   border-color: #003366 !important;
 }
+
 .btn-outline-primary {
   color: var(--primary-color) !important;
   border-color: var(--primary-color) !important;
 }
+
 .btn-outline-primary:hover {
   background-color: var(--primary-color) !important;
   color: white !important;
 }
-.border-primary { border-color: var(--primary-color) !important; }
-.badge.bg-primary { background-color: var(--primary-color) !important; }
-.bg-primary-soft { background-color: rgba(0, 68, 139, 0.1) !important; }
+
+.border-primary {
+  border-color: var(--primary-color) !important;
+}
+
+.badge.bg-primary {
+  background-color: var(--primary-color) !important;
+}
+
+.bg-primary-soft {
+  background-color: rgba(0, 68, 139, 0.1) !important;
+}
 
 /* Modern Hero Section Styling */
 .bg-primary-soft {
@@ -85,9 +111,11 @@ body {
   0% {
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4);
   }
+
   70% {
     box-shadow: 0 0 0 15px rgba(255, 255, 255, 0);
   }
+
   100% {
     box-shadow: 0 0 0 0 rgba(255, 255, 255, 0);
   }
@@ -127,15 +155,16 @@ body {
   opacity: 0.4;
   transform: scale(0.92);
   filter: grayscale(10%) blur(0.5px);
-  pointer-events: none; /* Disable mouse/keyboard on neighbors */
-  box-shadow: 0 4px 15px rgba(0,0,0,0.05) !important;
+  pointer-events: none;
+  /* Disable mouse/keyboard on neighbors */
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05) !important;
 }
 
 .topic-card-bg.active-card {
   opacity: 1;
   transform: scale(1.02);
   filter: none;
-  box-shadow: 0 15px 35px rgba(0,0,0,0.15) !important;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
 }
 
 /* Carousel Navigation Buttons */
@@ -163,7 +192,8 @@ body {
   box-shadow: 0 8px 25px rgba(13, 110, 253, 0.3) !important;
 }
 
-.carousel-nav-btn:disabled, .carousel-nav-btn.disabled {
+.carousel-nav-btn:disabled,
+.carousel-nav-btn.disabled {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -184,8 +214,10 @@ body {
   transition: transform 0.5s ease, opacity 0.5s ease, box-shadow 0.5s ease, filter 0.5s ease;
   position: relative;
   overflow: hidden;
-  touch-action: none; /* Disable mobile scroll on the card itself */
-  user-select: none; /* Prevent text selection while dragging */
+  touch-action: none;
+  /* Disable mobile scroll on the card itself */
+  user-select: none;
+  /* Prevent text selection while dragging */
   cursor: pointer;
   min-height: 450px;
   background-color: #ffffff;
@@ -199,11 +231,12 @@ body {
   width: 100%;
   z-index: 0;
   /* Add slight border to clearly show the fill line if needed, but color might be enough */
-  border-top: 2px solid rgba(255,255,255,0.3);
+  border-top: 2px solid rgba(255, 255, 255, 0.3);
 }
 
 .rating-label-small {
-  color: #6b7280; /* Gray */
+  color: #6b7280;
+  /* Gray */
   font-size: 0.75rem;
   padding: 3px 4px;
   border-radius: 4px;
@@ -212,22 +245,23 @@ body {
   z-index: 2;
   writing-mode: horizontal-tb;
   text-align: right;
-  text-shadow: 0 0 3px rgba(255,255,255,0.8);
+  text-shadow: 0 0 3px rgba(255, 255, 255, 0.8);
 }
 
 .rating-label-small.active-label {
-  color: #111827; /* Prominent dark black */
+  color: #111827;
+  /* Prominent dark black */
   background: rgba(255, 255, 255, 0.85);
   text-shadow: none;
   transform: scale(1.15);
   transform-origin: right center;
   font-weight: 800 !important;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .rating-label-small.covered-label {
   color: #ffffff !important;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
 }
 
 .tick-mark {
@@ -257,7 +291,7 @@ body {
   border-radius: 50%;
   width: 70px;
   height: 70px;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.15);
   animation: hintBounce 1.5s infinite ease-in-out;
   opacity: 0;
   transition: opacity 0.3s ease;
@@ -274,8 +308,15 @@ body {
 }
 
 @keyframes hintBounce {
-  0%, 100% { transform: translate(-50%, -50%); }
-  50% { transform: translate(-50%, -65%); }
+
+  0%,
+  100% {
+    transform: translate(-50%, -50%);
+  }
+
+  50% {
+    transform: translate(-50%, -65%);
+  }
 }
 
 #slider-value-display {
@@ -289,8 +330,15 @@ body {
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(10px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Topic Card Background Transition */
@@ -308,4 +356,12 @@ body {
 .survey-page-body {
   min-height: 100vh !important;
   overflow-x: hidden !important;
+}
+
+/* Make bold tags in survey intro extra prominent */
+#intro-body strong,
+#intro-body b {
+  font-weight: 400;
+  color: #0f172a;
+  /* Slate 900 for high contrast against muted gray */
 }

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>פאנל ניהול - סקר עסקים</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
+    <link href="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.snow.css" rel="stylesheet">
     <link rel="stylesheet" href="css/admin-styles.css">
 </head>
 <body>
@@ -86,8 +87,8 @@
                                 <input type="text" class="form-control" id="ve-intro-title" required>
                             </div>
                             <div class="mb-3">
-                                <label for="ve-intro-body" class="form-label">טקסט פתיחה (ניתן להזין שורות חדשות)</label>
-                                <textarea class="form-control" id="ve-intro-body" rows="4" required></textarea>
+                                <label class="form-label">טקסט פתיחה (ניתן לערוך ולהדגיש טקסט)</label>
+                                <div id="ve-intro-body-editor" style="height: 200px; background: white; color: black; border-radius: 8px;"></div>
                             </div>
                             <div class="mb-3">
                                 <label for="ve-video-url" class="form-label">קישור לסרטון (יוטיוב, וימאו או קובץ) - אופציונלי</label>
@@ -307,6 +308,7 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/chart.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/quill@2.0.2/dist/quill.js"></script>
     <script src="js/admin-app.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
