@@ -144,7 +144,7 @@
     "message": "התשובות שלך התקבלו בהצלחה."
   },
   "idle": {
-    "timeoutSeconds": 120,
+    "timeoutSeconds": 30,
     "message": "לא סיימת את השאלון, ממשיכים?"
   }
 }
