@@ -165,6 +165,20 @@ app.put('/api/survey/update/:response_id', async (req, res) => {
   }
 });
 
+// Check if respondent has an existing response
+app.get('/api/survey/check-response/:respondent_id', async (req, res) => {
+  try {
+    const [rows] = await db.execute("SELECT * FROM responses WHERE respondent_id = ? ORDER BY created_at DESC LIMIT 1", [req.params.respondent_id || '']);
+    if (rows.length > 0) {
+      res.json({ found: true, data: rows[0] });
+    } else {
+      res.json({ found: false });
+    }
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // --- ADMIN ROUTES ---
 
 // Admin Login

@@ -139,6 +139,50 @@ const UserApp = (() => {
     };
 
     const initIndex = async () => {
+        // 1. Check localStorage first (fast client-side redirect)
+        const storedState = localStorage.getItem('surveyState');
+        if (storedState) {
+            try {
+                const state = JSON.parse(storedState);
+                if (state.response_id && (state.status === 'in_progress' || state.status === 'completed' || state.status === 'edited_after_completion')) {
+                    window.location.href = 'survey.html';
+                    return;
+                }
+            } catch (e) {
+                console.error("Failed to parse stored surveyState", e);
+            }
+        }
+
+        // 2. Check DB via cookie (recovers session if localStorage was cleared)
+        let respondentId = getCookie('respondent_id');
+        if (respondentId) {
+            try {
+                const res = await fetch(`${BASE_URL}/api/survey/check-response/${respondentId}`, {
+                    headers: { 'ngrok-skip-browser-warning': '1' }
+                });
+                if (res.ok) {
+                    const result = await res.json();
+                    if (result.found && result.data) {
+                        const serverData = result.data;
+                        const reconstructedState = {
+                            respondent_id: respondentId,
+                            response_id: serverData.response_id,
+                            survey_id: serverData.survey_id,
+                            topic_ratings: JSON.parse(serverData.topic_ratings_json || '{}'),
+                            last_answered_topic_index: serverData.last_answered_topic_index !== null ? serverData.last_answered_topic_index : -1,
+                            status: serverData.status,
+                            final_comment: serverData.final_comment || ''
+                        };
+                        localStorage.setItem('surveyState', JSON.stringify(reconstructedState));
+                        window.location.href = 'survey.html';
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to check existing response", err);
+            }
+        }
+
         await loadConfig();
         if (!config) return;
 
@@ -211,7 +255,6 @@ const UserApp = (() => {
         }
 
         // Check if returning user
-        let respondentId = getCookie('respondent_id');
         if (!respondentId) {
             respondentId = generateId();
             setCookie('respondent_id', respondentId, 30);
