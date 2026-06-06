@@ -502,3 +502,76 @@ body {
   box-shadow: inset -4px 0 10px rgba(0, 0, 0, 0.08), inset 4px 0 10px rgba(0, 0, 0, 0.08);
   background: rgba(0, 0, 0, 0.02);
 }
+
+/* Mobile Optimization - Prevent Scrolling & Adjust Brand Glows */
+@media (max-width: 767px) {
+  .survey-page-body {
+    min-height: 100vh !important;
+    overflow-y: auto !important;
+  }
+  
+  .container.py-4 {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  
+  .carousel-container {
+    width: 100vw !important;
+    margin-left: calc(-50vw + 50%) !important;
+    margin-right: calc(-50vw + 50%) !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 1.5rem !important;
+    margin-top: 0 !important;
+    margin-bottom: 0 !important;
+  }
+  
+  .carousel-track {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+  
+  header {
+    margin-bottom: 0.25rem !important;
+    padding: 6px 0 !important;
+  }
+  
+  footer {
+    padding-top: 0 !important;
+    padding-bottom: 0.25rem !important;
+    margin-top: auto !important;
+  }
+
+  /* Increase visibility of amorphous brand glow blobs on mobile */
+  .glow-blob {
+    filter: blur(80px) !important;
+    opacity: 0.22 !important;
+  }
+  
+  .glow-red-1 {
+    width: 60vw !important;
+    height: 60vw !important;
+    top: -10vw !important;
+    right: -10vw !important;
+  }
+  
+  .glow-blue-1 {
+    width: 65vw !important;
+    height: 65vw !important;
+    bottom: -10vw !important;
+    left: -10vw !important;
+  }
+  
+  .glow-red-2 {
+    width: 45vw !important;
+    height: 45vw !important;
+    bottom: 20vw !important;
+    right: -10vw !important;
+  }
+  
+  .glow-blue-2 {
+    width: 50vw !important;
+    height: 50vw !important;
+    top: 20vw !important;
+    left: -10vw !important;
+  }
+}

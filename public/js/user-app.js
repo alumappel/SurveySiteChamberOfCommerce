@@ -512,9 +512,9 @@ const UserApp = (() => {
         let buttonHtml = '';
         if (isLastCard && isEditing) {
             buttonHtml = `
-                <div class="text-center mt-3 z-3 position-absolute bottom-0 start-50 translate-middle-x mb-4" style="pointer-events: auto; width: 100%;">
+                <div class="text-center mt-3 z-3 position-absolute bottom-0 mb-4" style="pointer-events: auto; left: 0; width: calc(100% - 100px);">
                     <span class="d-inline-block disabled-wrapper" tabindex="0">
-                        <button class="btn btn-success btn-lg rounded-pill px-5 shadow-sm btn-finish-survey ${!hasValue ? 'disabled' : ''}" style="${!hasValue ? 'pointer-events: none;' : ''}">
+                        <button class="btn btn-success rounded-pill px-3 shadow-sm btn-finish-survey ${!hasValue ? 'disabled' : ''}" style="${!hasValue ? 'pointer-events: none;' : ''}">
                             הגשת הסקר <i class="bi bi-check-lg ms-1"></i>
                         </button>
                     </span>
