@@ -222,7 +222,7 @@ body {
   user-select: none;
   /* Prevent text selection while dragging */
   cursor: pointer;
-  min-height: 450px;
+  height: 480px;
   background: linear-gradient(135deg, #fdfbf7 0%, #fbf7e7 50%, #f5ecd1 100%);
   border: 2.5px solid #ffffff;
   box-shadow: 0 0 0 1.5px rgba(212, 175, 55, 0.35), inset 0 1px 4px rgba(255, 255, 255, 0.8), 0 20px 40px rgba(0, 0, 0, 0.12);
@@ -623,6 +623,23 @@ body {
     flex: 1 1 auto !important;
     white-space: nowrap !important;
   }
+
+  /* נעילת גובה הכרטיסייה והתאמת תמונה ומרווחים במובייל למניעת גלילה */
+  .topic-card-bg {
+    height: 60vh !important;
+    min-height: 380px !important;
+    max-height: 450px !important;
+  }
+
+  /* הקטנת תמונות ומרווחים במובייל לפנות מקום לטקסט */
+  .content-overlay img {
+    max-height: 120px !important;
+    margin-bottom: 0.75rem !important;
+  }
+
+  .content-overlay h2 {
+    margin-bottom: 0.5rem !important;
+  }
 }
 
 /* Premium Action Buttons - Rich Blue Gradient with Gold Halo and White Border */
@@ -769,4 +786,30 @@ body {
 .carousel-nav-btn i,
 .inactivity-hint i {
   -webkit-text-stroke: 1.6px currentColor !important;
+}
+
+/* פתרון פלקסבוקס ונעילת גבהים למניעת גדילה של תתי-אלמנטים וביצוע מדידה מדויקת ב-JS */
+.main-card-area {
+  height: 100%;
+  min-height: 0;
+}
+
+/* מרווחים בטוחים לתוכן הכרטיסייה למניעת התנגשויות */
+.content-overlay {
+  height: 100%;
+  min-height: 0;
+  padding-top: 75px !important; /* הגדלה ל-75px כדי להתרחק ממחוון האחוזים */
+  padding-bottom: 40px !important;
+}
+
+/* מרווח תחתון מוגדל בכרטיסייה האחרונה כאשר כפתור ההגשה מוצג */
+.content-overlay.has-submit-btn {
+  padding-bottom: 90px !important; /* פינוי מקום לכפתור הגשת הסקר הממוקם אבסולוטית בתחתית */
+}
+
+/* יישור אנכי חכם - מונע גלישה כלפי מעלה */
+.content-inner {
+  margin-top: auto;
+  margin-bottom: auto;
+  width: 100%;
 }

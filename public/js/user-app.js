@@ -455,7 +455,10 @@ const UserApp = (() => {
         // Window resize to handle responsive views
         window.addEventListener('resize', () => {
             clearTimeout(window.resizeTimer);
-            window.resizeTimer = setTimeout(updateCarousel, 150);
+            window.resizeTimer = setTimeout(() => {
+                adjustCardFonts();
+                updateCarousel();
+            }, 150);
         });
     };
 
@@ -559,10 +562,12 @@ const UserApp = (() => {
                             ${hasValue ? val + '%' : ''}
                         </div>
 
-                        <div class="content-overlay position-relative flex-grow-1 d-flex flex-column justify-content-center align-items-center px-4 text-center" style="pointer-events: none; z-index: 2;">
-                            ${topic.imageUrl ? `<img src="${topic.imageUrl}" alt="תמונת נושא" class="img-fluid rounded-3 mb-4 shadow-sm" draggable="false" style="max-height: 200px; object-fit: cover;">` : ''}
-                            <h2 class="fw-bold mb-3 text-dark" style="font-size: 2.2rem; text-shadow: 0 0 10px rgba(255,255,255,0.8);">${topic.title}</h2>
-                            <p class="text-dark fs-5 mb-0" style="text-shadow: 0 0 10px rgba(255,255,255,0.8);">${topic.description}</p>
+                        <div class="content-overlay position-relative flex-grow-1 d-flex flex-column align-items-center px-4 text-center ${isLastCard && isEditing ? 'has-submit-btn' : ''}" style="pointer-events: none; z-index: 2;">
+                            <div class="content-inner w-100 d-flex flex-column align-items-center">
+                                ${topic.imageUrl ? `<img src="${topic.imageUrl}" alt="תמונת נושא" class="img-fluid rounded-3 mb-4 shadow-sm" draggable="false" style="max-height: 200px; object-fit: cover;">` : ''}
+                                <h2 class="fw-bold mb-3 text-dark card-title-text" style="font-size: 2.2rem; text-shadow: 0 0 10px rgba(255,255,255,0.8);">${topic.title}</h2>
+                                <p class="text-dark mb-0 card-desc-text" style="font-size: 1.25rem; text-shadow: 0 0 10px rgba(255,255,255,0.8);">${topic.description}</p>
+                            </div>
                         </div>
                     </div>
                     
@@ -630,6 +635,9 @@ const UserApp = (() => {
             progressBar.style.width = `${progressPercent}%`;
             progressBar.setAttribute('aria-valuenow', progressPercent);
         }
+
+        // Adjust card fonts to fit the content
+        adjustCardFonts();
     };
 
     const updateNavButtons = () => {
@@ -693,6 +701,19 @@ const UserApp = (() => {
         [...tooltipTriggerList].map(tooltipTriggerEl => new bootstrap.Tooltip(tooltipTriggerEl));
 
         attachDynamicListeners();
+        adjustCardFonts();
+
+        // Listen to image load events to adjust fonts when images load
+        const images = container.querySelectorAll('.content-inner img');
+        images.forEach(img => {
+            if (img.complete) {
+                adjustCardFonts();
+            } else {
+                img.addEventListener('load', () => {
+                    adjustCardFonts();
+                });
+            }
+        });
     };
 
     const attachDynamicListeners = () => {
@@ -931,6 +952,48 @@ const UserApp = (() => {
         const toastEl = document.getElementById('survey-toast');
         const toast = new bootstrap.Toast(toastEl);
         toast.show();
+    };
+
+    const adjustCardFonts = () => {
+        const cards = document.querySelectorAll('.topic-card-bg');
+        cards.forEach(card => {
+            const overlay = card.querySelector('.content-overlay');
+            const inner = card.querySelector('.content-inner');
+            if (!overlay || !inner) return;
+
+            const title = overlay.querySelector('.card-title-text');
+            const desc = overlay.querySelector('.card-desc-text');
+            if (!title) return;
+
+            // Reset font sizes to their maximum defaults first
+            title.style.fontSize = '2.2rem';
+            if (desc) {
+                desc.style.fontSize = '1.25rem'; // equivalent to fs-5
+            }
+
+            // Get available height inside overlay
+            const styles = window.getComputedStyle(overlay);
+            const paddingTop = parseFloat(styles.paddingTop) || 0;
+            const paddingBottom = parseFloat(styles.paddingBottom) || 0;
+            const maxHeight = overlay.clientHeight - paddingTop - paddingBottom;
+
+            // If the element is hidden (height is 0), skip adjustment to avoid shrinking fonts prematurely
+            if (overlay.clientHeight === 0) return;
+
+            // Shrink title and description proportionally using a constant ratio (1.25 / 2.2 ≈ 0.57)
+            let titleSize = 2.2;
+            let descSize = 1.25;
+
+            while (inner.scrollHeight > maxHeight && titleSize > 1.0) {
+                titleSize -= 0.05;
+                descSize = titleSize * 0.57;
+                
+                title.style.fontSize = `${titleSize}rem`;
+                if (desc) {
+                    desc.style.fontSize = `${descSize}rem`;
+                }
+            }
+        });
     };
 
     return {
