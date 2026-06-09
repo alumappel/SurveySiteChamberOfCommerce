@@ -7,7 +7,7 @@
     <title>סקר עסקים - לשכת המסחר</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.rtl.min.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
-    <link rel="stylesheet" href="css/user-styles.css?v=10">
+    <link rel="stylesheet" href="css/user-styles.css?v=15">
 </head>
 
 <body class="bg-light d-flex flex-column min-vh-100 survey-page-body">
@@ -51,17 +51,27 @@
 
         <div id="completion-container" class="card shadow-lg mx-auto p-5 text-center rounded-4"
             style="max-width: 600px; display: none;">
-            <i id="completion-icon" class="bi bi-check-circle-fill text-primary" style="font-size: 5rem;"></i>
-            <h1 id="completion-title" class="mt-4 fw-bold">תודה רבה!</h1>
-            <p id="completion-message" class="lead text-muted"></p>
-
-            <div id="final-comment-section" class="mt-4">
-                <label for="final-comment" class="form-label fw-bold">אם יש עוד משהו שתרצה להגיד לנו, זה הזמן:</label>
-                <textarea id="final-comment" class="form-control" rows="3"></textarea>
-                <button id="btn-submit-comment" class="btn btn-success mt-3 rounded-pill px-4">שליחת תגובה</button>
+            
+            <!-- Step 1: Feedback Form -->
+            <div id="completion-step-feedback">
+                <h2 class="mt-2 fw-bold text-dark mb-4">יש לך עוד רעיון? <br class="d-md-none">זה הזמן לספר לנו!</h2>
+                <div class="mt-3">
+                    <textarea id="final-comment" class="form-control" rows="3" placeholder="כאן אפשר לכתוב..."></textarea>
+                    <button id="btn-submit-comment" class="btn btn-success mt-4 rounded-pill px-5 py-3 fw-bold w-100">לא תודה, אני רוצה לסיים</button>
+                </div>
             </div>
 
-            <button id="btn-edit-survey" class="btn btn-outline-primary mt-4 rounded-pill">עריכת תשובות</button>
+            <!-- Step-2: Thank You / Completion -->
+            <div id="completion-step-thanks" style="display: none;">
+                <i id="completion-icon" class="bi bi-check-circle-fill text-primary" style="font-size: 5rem;"></i>
+                <h1 id="completion-title" class="mt-4 fw-bold">תודה רבה!</h1>
+                <p id="completion-message" class="lead text-muted"></p>
+            </div>
+
+            <!-- Always visible at the bottom of both steps -->
+            <div class="mt-4 pt-2 border-top">
+                <button id="btn-edit-survey" class="btn btn-outline-primary rounded-pill w-100 py-2 mt-3">עריכת תשובות</button>
+            </div>
         </div>
     </div>
 
@@ -116,7 +126,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script src="./js/user-app.js?v=10"></script>
+    <script src="./js/user-app.js?v=15"></script>
     <script>
         document.addEventListener('DOMContentLoaded', () => {
             UserApp.initSurvey();

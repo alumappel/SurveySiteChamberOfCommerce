@@ -381,8 +381,80 @@ const UserApp = (() => {
         document.addEventListener('touchstart', resetIdleTimer);
         resetIdleTimer();
 
+        // Setup final comment feedback listeners
+        const commentInput = document.getElementById('final-comment');
+        const submitCommentBtn = document.getElementById('btn-submit-comment');
+        if (commentInput && submitCommentBtn) {
+            commentInput.addEventListener('input', () => {
+                if (commentInput.value.trim().length > 0) {
+                    submitCommentBtn.textContent = 'שליחת תגובה';
+                } else {
+                    submitCommentBtn.textContent = 'לא תודה, אני רוצה לסיים';
+                }
+            });
+
+            submitCommentBtn.addEventListener('click', async () => {
+                const comment = commentInput.value.trim();
+                
+                const originalText = submitCommentBtn.textContent;
+                submitCommentBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> שולח...';
+                submitCommentBtn.disabled = true;
+
+                if (comment.length > 0) {
+                    surveyState.final_comment = comment;
+                    await saveProgress();
+                    localStorage.setItem('surveyState', JSON.stringify(surveyState));
+                }
+
+                // Show Step 2
+                document.getElementById('completion-step-feedback').style.display = 'none';
+                document.getElementById('completion-step-thanks').style.display = 'block';
+                
+                submitCommentBtn.disabled = false;
+                submitCommentBtn.textContent = originalText;
+            });
+        }
+
+        // Setup edit survey button listener
+        const editSurveyBtn = document.getElementById('btn-edit-survey');
+        if (editSurveyBtn) {
+            editSurveyBtn.addEventListener('click', () => {
+                currentTopicIndex = 0;
+                surveyState.status = 'edited_after_completion';
+                document.getElementById('completion-container').style.display = 'none';
+                renderTopics();
+            });
+        }
+
+        // Carousel Navigation Click Events
+        const btnPrev = document.getElementById('carousel-btn-prev');
+        const btnNext = document.getElementById('carousel-btn-next');
+        if (btnPrev && btnNext) {
+            btnPrev.addEventListener('click', () => {
+                if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+                if (currentTopicIndex > 0) {
+                    currentTopicIndex--;
+                    updateCarousel();
+                    updateNavButtons();
+                }
+            });
+            btnNext.addEventListener('click', () => {
+                if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
+                handleNextTopic();
+            });
+        }
+
+        // Window resize to handle responsive views
+        window.addEventListener('resize', () => {
+            clearTimeout(window.resizeTimer);
+            window.resizeTimer = setTimeout(() => {
+                adjustCardFonts();
+                updateCarousel();
+            }, 150);
+        });
+
         if (surveyState.status === 'completed' || surveyState.status === 'edited_after_completion') {
-            showCompletion();
+            showCompletion(true);
             return;
         }
 
@@ -413,53 +485,6 @@ const UserApp = (() => {
         } else {
             renderTopics();
         }
-
-        // Final comment setup
-        document.getElementById('btn-submit-comment').addEventListener('click', async () => {
-            const comment = document.getElementById('final-comment').value;
-            surveyState.final_comment = comment;
-            const btn = document.getElementById('btn-submit-comment');
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> שולח...';
-            btn.disabled = true;
-
-            await saveProgress();
-
-            document.getElementById('final-comment-section').innerHTML = '<p class="text-success fw-bold">תגובתך נשמרה בהצלחה. תודה!</p>';
-        });
-
-        // Carousel Navigation Click Events
-        const btnPrev = document.getElementById('carousel-btn-prev');
-        const btnNext = document.getElementById('carousel-btn-next');
-        if (btnPrev && btnNext) {
-            btnPrev.addEventListener('click', () => {
-                if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
-                if (currentTopicIndex > 0) {
-                    currentTopicIndex--;
-                    updateCarousel();
-                    updateNavButtons();
-                }
-            });
-            btnNext.addEventListener('click', () => {
-                if (autoAdvanceTimer) clearTimeout(autoAdvanceTimer);
-                handleNextTopic();
-            });
-        }
-
-        document.getElementById('btn-edit-survey').addEventListener('click', () => {
-            currentTopicIndex = 0;
-            surveyState.status = 'edited_after_completion';
-            document.getElementById('completion-container').style.display = 'none';
-            renderTopics();
-        });
-
-        // Window resize to handle responsive views
-        window.addEventListener('resize', () => {
-            clearTimeout(window.resizeTimer);
-            window.resizeTimer = setTimeout(() => {
-                adjustCardFonts();
-                updateCarousel();
-            }, 150);
-        });
     };
 
     const getPastelColor = (percent) => {
@@ -827,7 +852,7 @@ const UserApp = (() => {
                     card._ratingFrozen = true;
                     card.classList.add('rating-frozen');
                     await commitRating();
-                }, 500);
+                }, 750);
             };
 
             card.addEventListener('mousedown', (e) => {
@@ -956,7 +981,7 @@ const UserApp = (() => {
         }
     };
 
-    const showCompletion = () => {
+    const showCompletion = (isInitialPageLoad = false) => {
         const outerContainer = document.getElementById('carousel-outer-container');
         if (outerContainer) outerContainer.style.display = 'none';
 
@@ -970,8 +995,24 @@ const UserApp = (() => {
         document.getElementById('completion-title').textContent = config.completion.title;
         document.getElementById('completion-message').textContent = config.completion.message;
 
-        if (surveyState.final_comment) {
-            document.getElementById('final-comment-section').innerHTML = '<p class="text-success fw-bold">תגובתך נשמרה.</p>';
+        const stepFeedback = document.getElementById('completion-step-feedback');
+        const stepThanks = document.getElementById('completion-step-thanks');
+        const commentInput = document.getElementById('final-comment');
+        const submitCommentBtn = document.getElementById('btn-submit-comment');
+
+        // If it's a fresh page load and the user already has a comment or completed, show Step 2
+        if (isInitialPageLoad && (surveyState.final_comment || surveyState.status === 'completed')) {
+            if (stepFeedback) stepFeedback.style.display = 'none';
+            if (stepThanks) stepThanks.style.display = 'block';
+        } else {
+            if (stepFeedback) stepFeedback.style.display = 'block';
+            if (stepThanks) stepThanks.style.display = 'none';
+            if (commentInput) {
+                commentInput.value = surveyState.final_comment || '';
+            }
+            if (submitCommentBtn) {
+                submitCommentBtn.textContent = (surveyState.final_comment) ? 'שליחת תגובה' : 'לא תודה, אני רוצה לסיים';
+            }
         }
     };
 
