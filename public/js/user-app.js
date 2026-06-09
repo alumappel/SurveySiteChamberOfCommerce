@@ -600,6 +600,14 @@ const UserApp = (() => {
             if (!cardInner) return;
             const topicId = cardInner.getAttribute('data-topic-id');
 
+            // Reset freeze state on transition
+            if (cardInner._freezeTimer) {
+                clearTimeout(cardInner._freezeTimer);
+                cardInner._freezeTimer = null;
+            }
+            cardInner._ratingFrozen = false;
+            cardInner.classList.remove('rating-frozen');
+
             if (idx === currentTopicIndex) {
                 cardInner.classList.add('active-card');
                 cardInner.classList.remove('inactive-card');
@@ -722,6 +730,8 @@ const UserApp = (() => {
             let isDragging = false;
             const topicId = card.getAttribute('data-topic-id');
             const idx = parseInt(card.getAttribute('data-index'));
+            card._ratingFrozen = false;
+            card._freezeTimer = null;
 
             const updateRatingFromEvent = (e) => {
                 if (card.classList.contains('inactive-card')) return;
@@ -809,11 +819,31 @@ const UserApp = (() => {
                 }, config.rating.autoAdvanceDelayMs || 3000);
             };
 
+            const startFreezeTimeout = () => {
+                if (card._freezeTimer) {
+                    clearTimeout(card._freezeTimer);
+                }
+                card._freezeTimer = setTimeout(async () => {
+                    card._ratingFrozen = true;
+                    card.classList.add('rating-frozen');
+                    await commitRating();
+                }, 500);
+            };
+
             card.addEventListener('mousedown', (e) => {
                 if (card.classList.contains('inactive-card')) return;
+                if (card._ratingFrozen) return;
                 if (e.target.closest('.btn-finish-survey')) return;
 
                 isDragging = true;
+                if (card._freezeTimer) {
+                    clearTimeout(card._freezeTimer);
+                    card._freezeTimer = null;
+                }
+                if (autoAdvanceTimer) {
+                    clearTimeout(autoAdvanceTimer);
+                    autoAdvanceTimer = null;
+                }
                 updateRatingFromEvent(e);
             });
 
@@ -825,14 +855,23 @@ const UserApp = (() => {
             window.addEventListener('mouseup', (e) => {
                 if (!isDragging) return;
                 isDragging = false;
-                commitRating();
+                startFreezeTimeout();
             });
 
             card.addEventListener('touchstart', (e) => {
                 if (card.classList.contains('inactive-card')) return;
+                if (card._ratingFrozen) return;
                 if (e.target.closest('.btn-finish-survey')) return;
 
                 isDragging = true;
+                if (card._freezeTimer) {
+                    clearTimeout(card._freezeTimer);
+                    card._freezeTimer = null;
+                }
+                if (autoAdvanceTimer) {
+                    clearTimeout(autoAdvanceTimer);
+                    autoAdvanceTimer = null;
+                }
                 updateRatingFromEvent(e);
             }, { passive: true });
 
@@ -844,13 +883,13 @@ const UserApp = (() => {
             card.addEventListener('touchend', (e) => {
                 if (!isDragging) return;
                 isDragging = false;
-                commitRating();
+                startFreezeTimeout();
             });
 
             card.addEventListener('touchcancel', (e) => {
                 if (!isDragging) return;
                 isDragging = false;
-                commitRating();
+                startFreezeTimeout();
             });
         });
 
